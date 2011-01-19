@@ -20,333 +20,161 @@
 # Author: hellman ( hellman1908@gmail.com )
 # ---------------------------------------------------------------
 
-import os, sys
+import os
+import sys
 import getopt
+
+from routine import *
+from args import parse_arguments
 
 DEBUG = 0
 DIRNAME = 'xortool'
 
 PARAMETERS = {
-    "inputIsHex": 0,
-    "maxKeyLength": 32,
-    "knownKeyLength": None,
-    "mostFrequentChar": None,
-    "frequencySpread": 0,
-    "fileName": "-",
+    "input_is_hex": 0,
+    "max_key_length": 32,
+    "known_key_length": None,
+    "most_frequent_char": None,
+    "frequency_spread": 0,
+    "filename": "-", # stdin by default
 }
 
-
-def main(arguments):
-    """
-    Main program logic. Parse arguments & do the work.
-    @param arguments: list of program's arguments
-    """
-    parseArguments(arguments[1:])
+def main():
+    global PARAMETERS
+    PARAMETERS = parse_arguments(sys.argv[1:], PARAMETERS)
     
-    cipherText = getCipherText()
-    updateKeyLength(cipherText)
-    probableKeys = guessProbableKeys(cipherText)
+    ciphertext = get_ciphertext()
+    update_key_length(ciphertext)
+    probable_keys = guess_probable_keys(ciphertext)
     
-    producePlainTexts(cipherText, probableKeys)
+    #produce_plaintexts(ciphertext, probable_keys)
     return
 
 # ----------------------------------------------------------------------------
 
-def parseArguments(rawArguments):
+def get_ciphertext():
     """
-    Parse arguments and update PARAMETERS if needed
-    @param rawArguments: list of raw program's arguments (just sys.argv)
+    Load ciphertext from a file or stdin and hex-decode if needed
     """
-    options, realArguments = getOptionsAndArguments(rawArguments[1:]))
-    updateParameters(options, realArguments)
-    return
+    ciphertext = load_file(PARAMETERS["filename"])
+    if PARAMETERS["input_is_hex"]:
+        ciphertext = decode_from_hex(ciphertext)
+    return ciphertext
 
 
-def getCipherText():
-    """
-    Load ciphertext from a file or stdin
-    and hex-decode if needed
-    @type binary string: loaded ciphertext
-    """
-    cipherText = getFileContents(PARAMETERS["fileName"])
-    if PARAMETERS["inputIsHex"]:
-        cipherText = decodeFromHex(cipherText)
-    return cipherText
-
-
-def checkKeyLength(text):
+def update_key_length(text):
     """
     Guess length of the key if it's not set. (Updates PARAMETERS)
-    @param text: ciphertext which is analyzed
     """
-    if PARAMETERS["knownKeyLength"]:
+    global PARAMETERS
+    if PARAMETERS["known_key_length"]:
         return
-    PARAMETERS["knownKeyLength"] = guessKeyLength(text)
+    PARAMETERS["known_key_length"] = guess_key_length(text)
     return
 
 
-def guessProbableKeys(text):
+def guess_probable_keys(text):
     """
     Guess key if the most frequent char is known.
-    @param text: ciphertext
-    @type list: list of probable keys
     """
-    probableKeys = []
-    if PARAMETERS["mostFrequentChar"] == None:
+    probable_keys = []
+    if PARAMETERS["most_frequent_char"] is None:
         die("Most possible char is needed to guess the key!")
     else:
-        probableKeys = guessKeys(text)
-    return probableKeys
-
-# ----------------------------------------------------------------------------
-
-def getOptionsAndArguments(arguments):
-    try:
-        options, arguments = opt.getopt(arguments, "l:c:s:m:x", ["key-length", "char", "spread", "max-keylen", "hex", "help", "usage"])
-    except getopt.GetoptError:
-        showUsageAndExit()
-    return options, arguments
-
-
-def updateParameters(options, arguments):
-     """
-     FIXME
-     @param options:
-     @type options:
-     @param arguments:
-     @type arguments:
-     """
-
-    for option, value in options:
-        if option in ("-x", "--hex"):
-            PARAMETERS["inputIsHex"] = 1
-        elif option in ("-c", "--char"):
-            PARAMETERS["mostFrequentChar"] = parse_char(value)
-        elif option in ("-l", "--key-length"):
-            PARAMETERS["keyLength"] = int(value)
-        elif option in ("-s", "--spread"):
-            PARAMETERS["frequencySpread"] = int(value)
-        elif option in ("-m", "--max-keylen"):
-            PARAMETERS["maxKeyLength"] = int(value)
-        elif option in ("-h", "--help", "--usage"):
-            showUsageAndExit()
-            
-    if len(args) > 1:
-        die("OPTIONS should precede <filename>\n")
-    if len(args) == 1:
-        PARAMETERS["fileName"] = args[0]
-
-    return
-
-
-def decodeFromHex(text):
-     """
-     FIXME
-     @param text:
-     @type text:
-     """
-    HEXDIGITS = "0123456789abcdefABCDEF"
-    onlyHexDigits = "".join([c for c in text if c in HEXDIGITS])
-    return onlyHexDigits.decode("hex")
-
-
-def showUsageAndExit():
-     """
-     FIXME
-     @param :
-     @type :
-     """
-    print "xortool.py"
-    print "  A tool to do some xor analysis:"
-    print "  - guess the key length (based on count of equal chars)"
-    print "  - guess the key (base on knowledge of most probable char)"
-    print "Usage:"
-    print " ", os.path.basename(sys.argv[0]),"[-h|--help] [OPTIONS] [<filename>]"
-    print "Options:"
-    print " ", "-l,--key-length     length of the key"
-    print " ", "-c,--char           most possible char"
-    print " ", "-x,--hex            input is hex-encoded str"
-    print " ", "-s,--spread         spread of possible key bytes"
-    print " ", "-m,--max-keylen     maximum key length to probe"
-    sys.exit(1)
-    return
-
-
-def mkdir(dirname):
-     """
-     FIXME
-     @param dirname:
-     @type dirname:
-     """
-    if os.path.exists(dirname):
-        return
-    try:
-        os.mkdir(dirname)
-    except BaseException as err:
-        print "ERror: Can't create directory '"+dirname+"':\n"+str(err)
-        sys.exit(2)
-    return
-
-
-def cleardir(dirname):
-     """
-     FIXME
-     @param dirname:
-     @type dirname:
-     """
-    if dirname[-1] == os.sep:
-        dirname = dirname[:-1]
-    files = os.listdir(dirname)
-    for f in files:
-        if f == '.' or f == '..':
-            continue
-        path = dirname + os.sep + f
-        if os.path.isdir(path):
-            cleardir(path)
-        else:
-            os.unlink(path)
-    os.rmdir(dirname)
-    return
-
-
-def parse_char(ch):
-     """
-     FIXME
-     @param ch:
-     @type ch:
-     """
-    if len(ch) == 1:
-        return ord(ch)
-    if ch[0:2] == "\\x":
-        ch = ch[2:]
-    return int(ch, 16)
-
-
-def getFileContents(fileName):
-     """
-     FIXME
-     @param fileName:
-     @type fileName:
-     """
-    text = ''
-    try:
-        if fileName == "-":
-            text = sys.stdin.read()
-        else:
-            fd = open(fileName, "r")
-            text = fd.read()
-            fd.close()
-    except BaseException as err:
-        die( "error: Can't open '%s':\n%s" % (filename, err) )
-    return text
-
+        probable_keys = guess_keys(text)
+    return probable_keys
 
 #--------------------------------------------------
-# Try kry lengths from 1 to max_keylen
-# and print local maximums
-#--------------------------------------------------
+
+def guess_key_length(text):
+    """
+    Try key lengths from 1 to max_key_length and print local maximums.
+    Set key_length to the most possible if it's not set by user.
+    """
+    fitnesses = calculate_fitnesses(text)
+    print_fitnesses(fitnesses)
+    return guess_and_print_divizors(fitnesses)
 
 
-def guessKeyLength(text)
-     """
-     FIXME
-     @param text:
-     @type text:
-     """
-    # initial states
-    pprev = 0
+def calculate_fitnesses(text):
+    """
+    Calc. fitnesses for each keylen
+    """
     prev = 0
+    pprev = 0
     fitnesses = []
-    fitness_sum = 0
-
-    # for each key length
-    for keylen in range(1, max_keylen+1):
-        if keylen == len(text):
-            break
-        equals_count = 0
+    for keylen in range(1, PARAMETERS["max_key_length"]+1):
+        fitness = count_equals(keylen, text)
         
-        # COUNT EQUAL CHARS COUNT FOR EACH OFFSET AND SUM THEM
-        for offset in range(keylen):
-            chars_count = dict()
-            pos = offset
-            while pos < len(text):
-                c = text[pos]
-                if c in chars_count:
-                    chars_count[c] += 1
-                else:
-                    chars_count[c] = 1
-                pos += keylen
-            equals_count += max(chars_count.values())-1
-        
-        # CALCULATE PROBABILITY OF KEYLEN
-        fitness = equals_count
-        
-        # PRINT ALL KEYS' LENGTHS AND FITNESSES
-        if 0 or DEBUG:
-            print "length",keylen,":",fitness
-        
-        # PRINT LOCAL FITNESSES' MAXIMUMS
-        if pprev < prev and prev > fitness:
-            fitness_sum += fitness
+        if pprev < prev and prev > fitness:  # local maximum
             fitnesses += [(keylen-1, prev)]
-        
+
         pprev = prev
         prev = fitness
+        
+    return fitnesses
 
-    # PRINT PROBABILITY AND GUESS divizor FORM OF KEY
+
+def print_fitnesses(fitnesses):
     print "Probable key lengths:"
-    max_divizors = 0
-    main_number = -1
-    divizors_counts = [ 0 for i in range(keylen+1) ]
+    fitness_sum = calculate_fitness_sum(fitnesses)
     for keylen, fitness in fitnesses:
-        print str(keylen).rjust(4," ")+":  ", round(100*fitness/fitness_sum, 1,), "%"
+        print str(keylen).rjust(4," ")+":  ",
+        print round(100*fitness/fitness_sum, 1,), "%"
+    return
+    
+
+def calculate_fitness_sum(fitnesses):
+    return sum([f for (keylen, f) in fitnesses])
+
+
+def count_equals(keylen, text):
+    """
+    count equal chars count for each offset and sum them
+    """
+    equals_count = 0
+    if keylen >= len(text):
+        return 0
+
+    for offset in range(keylen):
+        chars_count = dict()
+        for pos in range(offset, len(text), keylen):
+            c = text[pos]
+            if c in chars_count:
+                chars_count[c] += 1
+            else:
+                chars_count[c] = 1
+        equals_count += max(chars_count.values()) #-1?
+
+    return equals_count
+
+
+def guess_and_print_divizors(fitnesses):
+    """
+    Prints common divizors and returns the most common divizor
+    """
+    divizors_counts = [ 0 for i in range(PARAMETERS["max_key_length"]+1) ]
+    for keylen, fitness in fitnesses:
         for number in range(3, keylen+1):
             if keylen % number == 0:
                 divizors_counts[number] += 1
     max_divizors = max(divizors_counts)
+    
     ret = 2
     for number in range(len(divizors_counts)):
         if divizors_counts[number] == max_divizors:
-            print "Key-length should be "+str(number)+"*n"
+            print "Key-length can be "+str(number)+"*n"
             ret = number
     return ret
 
 
-#--------------------------------------------------
-# just xor text with the key
-#--------------------------------------------------
-def dexor(s, key):
-                                                        """
-                                                        FIXME
-                                                        @param s:
-                                                        @type s:
-                                                        @param key:
-                                                        @type key:
-                                                        """
-    ret = list(s)
-    for i in range(len(ret)):
-        ret[i] = chr(ord(ret[i]) ^ ord(key[i % len(key)]))
-    return "".join(ret)
-
-
-#--------------------------------------------------
-# Generate all possible keys for key length 
-# and the most possible char 
-#--------------------------------------------------
-def probableKeys(text, key_length, most_char, spread):
-                                                        """
-                                                        FIXME
-                                                        @param text:
-                                                        @type text:
-                                                        @param key_length:
-                                                        @type key_length:
-                                                        @param most_char:
-                                                        @type most_char:
-                                                        @param spread:
-                                                        @type spread:
-                                                        """
-
-    # FIND OUT THE MOST POSSIBLE BYTES OF THE KEY
+def guess_keys(text):
+    """
+    Generate all possible keys for key length 
+    and the most possible char     
+    """
+    key_length = PARAMETERS["known_key_length"]
+    most_char = PARAMETERS["most_frequent_char"]
     key_possible_bytes = [[] for i in range(key_length)]
     for i in range(key_length): #each byte of key
         maxcount = 0
@@ -363,7 +191,7 @@ def probableKeys(text, key_length, most_char, spread):
             pos += key_length
             
         for c in char_count:
-            if maxcount > char_count[c]+spread:
+            if maxcount > char_count[c]:
                 continue
             key_possible_bytes[i] += [ord(c) ^ most_char]
 
@@ -386,19 +214,10 @@ def probableKeys(text, key_length, most_char, spread):
     return
 
 
-#--------------------------------------------------
-# Produce all combinations of possible key chars
-#--------------------------------------------------
 def all_keys(key_possible_bytes, key_part, offset):
-                                                        """
-                                                        FIXME
-                                                        @param key_possible_bytes:
-                                                        @type key_possible_bytes:
-                                                        @param key_part:
-                                                        @type key_part:
-                                                        @param offset:
-                                                        @type offset:
-                                                        """
+    """
+    Produce all combinations of possible key chars
+    """
     ret = []
     if offset >= len(key_possible_bytes):
         return [key_part];
@@ -407,20 +226,18 @@ def all_keys(key_possible_bytes, key_part, offset):
     return ret
 
 
+def dexor(s, key):
+    ret = list(s)
+    for i in range(len(ret)):
+        ret[i] = chr(ord(ret[i]) ^ ord(key[i % len(key)]))
+    return "".join(ret)
+
 
 def die(exitMessage, exitCode=1):
-     """
-     FIXME
-     @param exitMessage:
-     @type exitMessage:
-     @param exitCode=1:
-     @type exitCode=1:
-     """
     print exitMessage
     sys.exit(exitCode)
     return
 
 
-
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
