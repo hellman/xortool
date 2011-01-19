@@ -1,0 +1,42 @@
+xortool.py
+  A tool to do some xor analysis:
+  - guess the key length (based on count of equal chars)
+  - guess the key (base on knowledge of most frequent char)
+
+Usage:
+  xortool [-h|--help] [OPTIONS] [<filename>]
+Options:
+  -l,--key-length     length of the key
+  -c,--char           most frequent char
+  -x,--hex            input is hex-encoded str
+  -m,--max-keylen     maximum key length to probe
+  
+Example
+    
+$ xor -f /bin/ls -s "s3cret \xa9 keyS" > binary_xored 
+
+$ py ../xortool.py binary_xored 
+Probable key lengths:
+   1:   6.3 %
+   9:   6.1 %
+  13:   32.3 %
+  17:   6.0 %
+  21:   5.9 %
+  23:   5.9 %
+  26:   31.6 %
+  30:   5.9 %
+Key-length can be 3*n
+Most possible char is needed to guess the key!
+
+# 00 is the most frequent byte in binaries
+$ py ../xortool.py binary_xored -l 13 -c '00'
+s3cret \xa9 keyS
+
+# decrypted ciphertexts are placed in ./xortool/<key repr>
+# ( have no better idea :S )
+$ md5sum 'xortool/s3cret \xa9 keyS' /bin/ls
+29942e290876703169e1b614d0b4340a  xortool/s3cret \\xa9 keyS
+29942e290876703169e1b614d0b4340a  /bin/ls
+
+Author: hellman ( hellman1908@gmail.com )
+License: GNU General Public License v2 (http://opensource.org/licenses/gpl-2.0.php)

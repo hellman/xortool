@@ -31,7 +31,7 @@ def mkdir(dirname):
     return
 
 
-def cleardir(dirname):
+def rmdir(dirname):
     if dirname[-1] == os.sep:
         dirname = dirname[:-1]
     if os.path.islink(dirname):
@@ -64,3 +64,16 @@ def parse_char(ch):
     if ch[0:2] == "\\x":
         ch = ch[2:]
     return int(ch, 16)
+
+
+def dexor(text, key):
+    ret = list(text)
+    for index, char in enumerate(ret):
+        ret[index] = chr(ord(char) ^ ord(key[index % len(key)]))
+    return "".join(ret)
+
+
+def die(exitMessage, exitCode=1):
+    print exitMessage
+    sys.exit(exitCode)
+    return

@@ -5,12 +5,39 @@ import getopt
 
 from routine import *
 
-def parse_arguments(arguments_list, PARAMETERS):
+PARAMETERS = {
+    "input_is_hex": 0,
+    "max_key_length": 32,
+    "known_key_length": None,
+    "most_frequent_char": None,
+    "frequency_spread": 0,
+    "filename": "-",  # stdin by default
+}
+
+def show_usage_and_exit():
+    print "xortool.py"
+    print "  A tool to do some xor analysis:"
+    print "  - guess the key length (based on count of equal chars)"
+    print "  - guess the key (base on knowledge of most probable char)"
+    print "Usage:"
+    print " ", os.path.basename(sys.argv[0]),"[-h|--help] [OPTIONS] [<filename>]"
+    print "Options:"
+    print " ", "-l,--key-length     length of the key"
+    print " ", "-c,--char           most possible char"
+    print " ", "-x,--hex            input is hex-encoded str"
+    #print " ", "-s,--spread         spread of possible key bytes"
+    print " ", "-m,--max-keylen     maximum key length to probe"
+    sys.exit(1)
+    return
+
+
+def parse_parameters():
     """
     Parse arguments and update PARAMETERS if needed
     """
-    options, real_arguments = get_options_and_arguments(arguments_list)
-    return update_parameters(PARAMETERS, options, real_arguments)
+    options, arguments = get_options_and_arguments(sys.argv[1:])
+    update_parameters(options, arguments)
+    return PARAMETERS
 
 
 def get_options_and_arguments(program_arguments):
@@ -29,9 +56,8 @@ def get_options_and_arguments(program_arguments):
     return options, arguments
 
 
-def update_parameters(PARAMETERS, options, arguments):
-    #print "OPTS", options
-    #print "ARGS", arguments
+def update_parameters(options, arguments):
+    global PARAMETERS
     for option, value in options:
         if option in ("-x", "--hex"):
             PARAMETERS["input_is_hex"] = 1
@@ -49,21 +75,4 @@ def update_parameters(PARAMETERS, options, arguments):
     if len(arguments) == 1:
         PARAMETERS["filename"] = arguments[0]
 
-    return PARAMETERS
-
-
-def show_usage_and_exit():
-    print "xortool.py"
-    print "  A tool to do some xor analysis:"
-    print "  - guess the key length (based on count of equal chars)"
-    print "  - guess the key (base on knowledge of most probable char)"
-    print "Usage:"
-    print " ", os.path.basename(sys.argv[0]),"[-h|--help] [OPTIONS] [<filename>]"
-    print "Options:"
-    print " ", "-l,--key-length     length of the key"
-    print " ", "-c,--char           most possible char"
-    print " ", "-x,--hex            input is hex-encoded str"
-    print " ", "-s,--spread         spread of possible key bytes"
-    print " ", "-m,--max-keylen     maximum key length to probe"
-    sys.exit(1)
     return

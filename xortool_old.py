@@ -93,7 +93,7 @@ def file_contents(filename):
 
 
 #--------------------------------------------------
-# Try kry lengths from 1 to max_keylen
+# Try key lengths from 1 to max_keylen
 # and print local maximums
 #--------------------------------------------------
 def try_lengths(text, max_keylen):
@@ -138,23 +138,28 @@ def try_lengths(text, max_keylen):
             #print 'added',prev,'=',fitness_sum,'(keylen =', keylen-1, ')'
         pprev = prev
         prev = fitness
-
+    print fitnesses
+    print fitness_sum
     # PRINT PROBABILITY AND GUESS divizor FORM OF KEY
     print "Probable key lengths:"
     max_divizors = 0
-    main_number = -1
+    #main_number = -1
     divizors_counts = [ 0 for i in range(keylen+1) ]
+    ret = 2
+    ret_fit = 0
     for keylen, fitness in fitnesses:
         print str(keylen).rjust(4," ")+":  ", round(100*fitness*1.0/fitness_sum, 1,), "%"
+        if fitness > ret_fit:
+            ret = keylen
+            ret_fit = fitness
         for number in range(3, keylen+1):
             if keylen % number == 0:
                 divizors_counts[number] += 1
     max_divizors = max(divizors_counts)
-    ret = 2
     for number in range(len(divizors_counts)):
         if divizors_counts[number] == max_divizors:
             print "Key-length should be "+str(number)+"*n"
-            ret = number
+            #ret = number
     return ret
 
 
@@ -245,7 +250,7 @@ def main():
     spread = 0
     most_char = None
     keylen = None
-    max_keylen = 17
+    max_keylen = 32
     
     # PARSING ARGUMENTS
     try:
@@ -277,6 +282,9 @@ def main():
     else:
         fname = args[0]
     text = file_contents(fname)
+    if not text:
+        print "No input! (Maybe file is empty)"
+        sys.exit(1)
     if fromhex:
         text = "".join([c for c in text if c in "0123456789abcdefABCDEF"]).decode("hex")
     
