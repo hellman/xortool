@@ -21,6 +21,7 @@
 
 import os
 import sys
+import math
 
 from routine import *
 from args import parse_parameters
@@ -77,8 +78,9 @@ def guess_key_length(text):
     """
     fitnesses = calculate_fitnesses(text)
     print_fitnesses(fitnesses)
-
-    return guess_and_print_divizors(fitnesses)
+    guess_and_print_divizors(fitnesses)
+    
+    return get_max_fitnessed_key_length(fitnesses)
 
 
 def calculate_fitnesses(text):
@@ -147,6 +149,16 @@ def guess_and_print_divizors(fitnesses):
     return ret
 
 
+def get_max_fitnessed_key_length(fitnesses):
+    max_fitness = 0
+    max_fitnessed_key_length = 0
+    for key_length, fitness in fitnesses:
+        if fitness > max_fitness:
+            max_fitness = fitness
+            max_fitnessed_key_length = key_length
+    return max_fitnessed_key_length
+
+
 def chars_count_at_offset(text, key_length, offset):
     chars_count = dict()
     for pos in range(offset, len(text), key_length):
@@ -205,8 +217,14 @@ def all_keys(key_possible_bytes, key_part="", offset=0):
 
 
 def print_keys(keys):
-    for key in keys:
+    if not keys:
+        print "No keys guessed!"
+        return
+    print "{0} possible key(s) of length {1}:".format(len(keys), len(keys[0]))
+    for key in keys[:5]:
         print repr(key)[1:-1]
+    if len(keys) > 10:
+        print "..."
 
 # ------------------------------------------------------------------------------
 # PRODUCE OUTPUT
@@ -220,10 +238,13 @@ def produce_plaintexts(ciphertext, keys):
         rmdir(DIRNAME)
     mkdir(DIRNAME)
     
-    for key in keys:
-         f = open(os.path.join("xortool", repr(key)[1:-1]), "w")
-         f.write(dexor(ciphertext, key))
-         f.close()
+    for index, key in enumerate(keys):
+        key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
+        key_repr = repr(key)[1:-1].replace("/", "\\x2f")
+        file_name = os.path.join("xortool", key_index + "_" + key_repr)
+        f = open(file_name, "w")
+        f.write(dexor(ciphertext, key))
+        f.close()
     return
 
 
