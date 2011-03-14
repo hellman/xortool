@@ -43,12 +43,9 @@ def parse_parameters():
 def get_options_and_arguments(program_arguments):
     options, arguments = [], []
     try:
-        options, arguments = getopt.getopt(program_arguments, "l:c:s:m:x",
-                ["key-length=", "char=", "spread=", "max-keylen=",
-                                          "hex", "help", "usage"])
-        if len(arguments) > 1:  # trick to parse options after filename
-            options += get_options_and_arguments(program_arguments[1:])[0]
-            arguments = arguments[:1]
+        options, arguments = getopt.gnu_getopt(program_arguments, "l:c:s:m:x",
+                            ["key-length=", "char=", "spread=", "max-keylen=",
+                                                      "hex", "help", "usage"])
         #TODO: add param "brute all possible freq. chars"
         
     except getopt.GetoptError:
