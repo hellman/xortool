@@ -3,18 +3,19 @@
 
 import os
 import sys
+import string
 
 def load_file(filename):
     if filename == "-":
         return sys.stdin.read()
-    fd = open(filename, "r")
+    fd = open(filename, "rb")
     contents = fd.read()
     fd.close()
     return contents
 
 
 def save_file(filename, data):
-    fd = open(filename, "w")
+    fd = open(filename, "wb")
     fd.write(data)
     fd.close()
     return
@@ -77,3 +78,17 @@ def die(exitMessage, exitCode=1):
     print exitMessage
     sys.exit(exitCode)
     return
+
+
+def is_linux():
+    return sys.platform.startswith("linux")
+
+
+def alphanum(s):
+    lst = list(s)
+    for index, char in enumerate(lst):
+        if char in (string.letters + string.digits):
+            continue
+        lst[index] = char.encode("hex")
+    return "".join(lst)
+        

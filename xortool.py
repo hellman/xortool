@@ -241,8 +241,10 @@ def produce_plaintexts(ciphertext, keys):
     for index, key in enumerate(keys):
         key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
         key_repr = repr(key)[1:-1].replace("/", "\\x2f")
+        if not is_linux():
+            key_repr = alphanum(key)
         file_name = os.path.join("xortool", key_index + "_" + key_repr)
-        f = open(file_name, "w")
+        f = open(file_name, "wb")
         f.write(dexor(ciphertext, key))
         f.close()
     return
