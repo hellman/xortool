@@ -10,7 +10,7 @@ Usage
 ---------------------
 
 <pre>
-  xortool [-h|--help] [OPTIONS] [<filename>]
+  xortool [-h|--help] [OPTIONS] [&lt;filename&gt;]
 Options:
   -l,--key-length     length of the key
   -c,--char           most frequent char
@@ -79,4 +79,5 @@ an0ther s3cret \xdd key
 </pre>
 
 Author: hellman ( hellman1908@gmail.com )
+
 License: GNU General Public License v2 (http://opensource.org/licenses/gpl-2.0.php)
