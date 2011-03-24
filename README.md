@@ -9,13 +9,15 @@ A tool to do some xor analysis:
 Usage
 ---------------------
 
+<pre>
   xortool [-h|--help] [OPTIONS] [<filename>]
 Options:
   -l,--key-length     length of the key
   -c,--char           most frequent char
   -x,--hex            input is hex-encoded str
   -m,--max-keylen     maximum key length to probe
-  
+</pre>
+
 Example
 ---------------------
 
