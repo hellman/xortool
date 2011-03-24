@@ -23,7 +23,7 @@ Example
 
 <pre>
 # xor is some external script to encrypt files
-tests $ xor -f /bin/ls -s "s3cret \xa9 keyS" > binary_xored 
+tests $ xor -f /bin/ls -s "secret_key" > binary_xored
 
 tests $ python ../xortool.py binary_xored
 Probable key lengths:
