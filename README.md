@@ -12,10 +12,10 @@ Usage
 <pre>
   xortool [-h|--help] [OPTIONS] [&lt;filename&gt;]
 Options:
-  -l,--key-length     length of the key
-  -c,--char           most frequent char
+  -l,--key-length     length of the key (integer)
+  -c,--char           most frequent char (one char or hex code)
+  -m,--max-keylen=32  maximum key length to probe (integer)
   -x,--hex            input is hex-encoded str
-  -m,--max-keylen     maximum key length to probe
 </pre>
 
 Example
@@ -48,15 +48,14 @@ tests $ python ../xortool.py binary_xored -l 10 -c 00
 1 possible key(s) of length 10:
 secret_key
 
-# decrypted ciphertexts are placed in ./xortool/Number_<key repr>
+# decrypted ciphertexts are placed in ./xortool/Number_&lt;key repr&gt;
 # ( have no better idea )
 tests $ md5sum xortool/0_secret_key /bin/ls
 29942e290876703169e1b614d0b4340a  xortool/0_secret_key
 29942e290876703169e1b614d0b4340a  /bin/ls
 </pre>
 
-The most common use is just pass the encrypted file and
-the most frequent character (usually 00 for binaries and 20 for text files):
+The most common use is to pass just the encrypted file and the most frequent character (usually 00 for binaries and 20 for text files) - length will be automatically chosen:
 
 <pre>
 tests $ xortool tool_xored -c 20
@@ -76,6 +75,36 @@ Probable key lengths:
 Key-length can be 5*n
 1 possible key(s) of length 20:
 an0ther s3cret \xdd key
+</pre>
+
+<pre>
+tests $ xortool ls_xored -c 00 -m 64
+Probable key lengths:
+   1:   2.6 %
+   3:   3.3 %
+   6:   3.3 %
+   9:   3.3 %
+  11:   7.0 %
+  15:   3.2 %
+  18:   3.2 %
+  22:   6.9 %
+  24:   3.3 %
+  27:   3.2 %
+  30:   3.2 %
+  33:   18.4 %
+  36:   3.2 %
+  39:   3.2 %
+  42:   3.2 %
+  44:   6.8 %
+  48:   3.2 %
+  51:   3.2 %
+  55:   6.7 %
+  57:   3.2 %
+  60:   3.1 %
+  63:   3.2 %
+Key-length can be 3*n
+1 possible key(s) of length 33:
+really long s3cr3t k3y... PADDING
 </pre>
 
 Author: hellman ( hellman1908@gmail.com )

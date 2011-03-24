@@ -5,6 +5,9 @@ import getopt
 
 from routine import *
 
+class ArgError(Exception):
+    pass
+
 PARAMETERS = {
     "input_is_hex": 0,
     "max_key_length": 32,
@@ -20,13 +23,12 @@ def show_usage_and_exit():
     print "  - guess the key length (based on count of equal chars)"
     print "  - guess the key (base on knowledge of most probable char)"
     print "Usage:"
-    print " ", os.path.basename(sys.argv[0]),"[-h|--help] [OPTIONS] [<filename>]"
+    print " ", os.path.basename(sys.argv[0]), "[-h|--help] [OPTIONS] [<filename>]"
     print "Options:"
-    print " ", "-l,--key-length     length of the key"
-    print " ", "-c,--char           most possible char"
+    print " ", "-l,--key-length     length of the key (integer)"
+    print " ", "-c,--char           most possible char (one char or hex code)"
+    print " ", "-m,--max-keylen=32  maximum key length to probe (integer)"
     print " ", "-x,--hex            input is hex-encoded str"
-    #print " ", "-s,--spread         spread of possible key bytes"
-    print " ", "-m,--max-keylen     maximum key length to probe"
     sys.exit(1)
     return
 
@@ -47,7 +49,7 @@ def get_options_and_arguments(program_arguments):
                             ["key-length=", "char=", "spread=", "max-keylen=",
                                                       "hex", "help", "usage"])
         #TODO: add param "brute all possible freq. chars"
-        
+
     except getopt.GetoptError:
         show_usage_and_exit()
     return options, arguments
@@ -55,20 +57,23 @@ def get_options_and_arguments(program_arguments):
 
 def update_parameters(options, arguments):
     global PARAMETERS
-    for option, value in options:
-        if option in ("-x", "--hex"):
-            PARAMETERS["input_is_hex"] = 1
-        elif option in ("-c", "--char"):
-            PARAMETERS["most_frequent_char"] = parse_char(value)
-        elif option in ("-l", "--key-length"):
-            PARAMETERS["known_key_length"] = int(value)
-        elif option in ("-s", "--spread"):
-            PARAMETERS["frequency_spread"] = int(value)
-        elif option in ("-m", "--max-keylen"):
-            PARAMETERS["max_key_length"] = int(value)
-        elif option in ("-h", "--help", "--usage"):
-            show_usage_and_exit()
-            
+    try:
+        for option, value in options:
+            if option in ("-x", "--hex"):
+                PARAMETERS["input_is_hex"] = 1
+            elif option in ("-c", "--char"):
+                PARAMETERS["most_frequent_char"] = parse_char(value)
+            elif option in ("-l", "--key-length"):
+                PARAMETERS["known_key_length"] = int(value)
+            elif option in ("-s", "--spread"):
+                PARAMETERS["frequency_spread"] = int(value)
+            elif option in ("-m", "--max-keylen"):
+                PARAMETERS["max_key_length"] = int(value)
+            elif option in ("-h", "--help", "--usage"):
+                show_usage_and_exit()
+    except ValueError as err:
+        raise ArgError(str(err))
+
     if len(arguments) == 1:
         PARAMETERS["filename"] = arguments[0]
 

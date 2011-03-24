@@ -8,10 +8,10 @@
 # Usage:
 #   xortool [-h|--help] [OPTIONS] [<filename>]
 # Options:
-#   -l,--key-length     length of the key
-#   -c,--char           most frequent char
-#   -x,--hex            input is hex-encoded str
-#   -m,--max-keylen     maximum key length to probe
+#  -l,--key-length     length of the key (integer)
+#  -c,--char           most frequent char (one char or hex code)
+#  -m,--max-keylen=32  maximum key length to probe (integer)
+#  -x,--hex            input is hex-encoded str
 # Examples:
 #   xortool file.bin
 #   xortool -x -l 4 -c ' ' file.hex
@@ -24,28 +24,37 @@ import sys
 import math
 
 from routine import *
-from args import parse_parameters
+from args import parse_parameters, ArgError
 
 DIRNAME = 'xortool'  # here plaintexts will be placed
 PARAMETERS = dict()
 
 def main():
     global PARAMETERS
-    PARAMETERS = parse_parameters()
-    
-    ciphertext = get_ciphertext()
-    
-    update_key_length(ciphertext)
+    try:
+        PARAMETERS = parse_parameters()
 
-    probable_keys = guess_probable_keys(ciphertext)
-    print_keys(probable_keys)
-    
-    produce_plaintexts(ciphertext, probable_keys)
-    return
+        ciphertext = get_ciphertext()
 
-# ------------------------------------------------------------------------------
+        update_key_length(ciphertext)
+
+        probable_keys = guess_probable_keys(ciphertext)
+        print_keys(probable_keys)
+
+        produce_plaintexts(ciphertext, probable_keys)
+    except IOError as err:
+        print "[ERROR] Can't load file:\n\t", err
+    except ArgError as err:
+        print "[ERROR] Bad argument:\n\t", err
+    except MkdirError as err:
+        print "[ERROR] Can't create directory:\n\t", err
+    else:
+        return
+    cleanup()
+
+# -----------------------------------------------------------------------------
 # LOADING CIPHERTEXT
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def get_ciphertext():
     """
@@ -56,9 +65,9 @@ def get_ciphertext():
         ciphertext = decode_from_hex(ciphertext)
     return ciphertext
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # KEYLENGTH GUESSING SECTION
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def update_key_length(text):
     """
@@ -79,7 +88,7 @@ def guess_key_length(text):
     fitnesses = calculate_fitnesses(text)
     print_fitnesses(fitnesses)
     guess_and_print_divizors(fitnesses)
-    
+
     return get_max_fitnessed_key_length(fitnesses)
 
 
@@ -90,16 +99,16 @@ def calculate_fitnesses(text):
     prev = 0
     pprev = 0
     fitnesses = []
-    for key_length in range(1, PARAMETERS["max_key_length"]+1):
+    for key_length in range(1, PARAMETERS["max_key_length"] + 1):
         fitness = count_equals(text, key_length)
-        fitness = float(fitness)/(64 + key_length**0.5)
-        
+        fitness = float(fitness) / (64 + key_length ** 0.5)
+
         if pprev < prev and prev > fitness:  # local maximum
-            fitnesses += [(key_length-1, prev)]
+            fitnesses += [(key_length - 1, prev)]
 
         pprev = prev
         prev = fitness
-    
+
     return fitnesses
 
 
@@ -107,7 +116,7 @@ def print_fitnesses(fitnesses):
     print "Probable key lengths:"
     fitness_sum = calculate_fitness_sum(fitnesses)
     for key_length, fitness in fitnesses:
-        print str(key_length).rjust(4," ") + ":  ",
+        print str(key_length).rjust(4, " ") + ":  ",
         print round(100 * fitness * 1.0 / fitness_sum, 1), "%"
     return
 
@@ -123,10 +132,10 @@ def count_equals(text, key_length):
     equals_count = 0
     if key_length >= len(text):
         return 0
-        
+
     for offset in range(key_length):
         chars_count = chars_count_at_offset(text, key_length, offset)
-        equals_count += max(chars_count.values())-1  # why -1? don't know
+        equals_count += max(chars_count.values()) - 1  # why -1? don't know
     return equals_count
 
 
@@ -134,13 +143,13 @@ def guess_and_print_divizors(fitnesses):
     """
     Prints common divizors and returns the most common divizor
     """
-    divizors_counts = [ 0 for i in range(PARAMETERS["max_key_length"]+1) ]
+    divizors_counts = [0 for i in range(PARAMETERS["max_key_length"] + 1)]
     for key_length, fitness in fitnesses:
-        for number in range(3, key_length+1):
+        for number in range(3, key_length + 1):
             if key_length % number == 0:
                 divizors_counts[number] += 1
     max_divizors = max(divizors_counts)
-    
+
     ret = 2
     for number, divizors_count in enumerate(divizors_counts):
         if divizors_count == max_divizors:
@@ -169,9 +178,9 @@ def chars_count_at_offset(text, key_length, offset):
             chars_count[c] = 1
     return chars_count
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # KEYS GUESSING SECTION
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def guess_probable_keys(text):
     """
@@ -187,14 +196,14 @@ def guess_probable_keys(text):
 
 def guess_keys(text):
     """
-    Generate all possible keys for key length 
-    and the most possible char     
+    Generate all possible keys for key length
+    and the most possible char
     """
     key_length = PARAMETERS["known_key_length"]
     most_char = PARAMETERS["most_frequent_char"]
     key_possible_bytes = [[] for i in range(key_length)]
 
-    for offset in range(key_length):  #each byte of key<
+    for offset in range(key_length):  # each byte of key<
         chars_count = chars_count_at_offset(text, key_length, offset)
         max_count = max(chars_count.values())
         for char in chars_count:
@@ -212,7 +221,7 @@ def all_keys(key_possible_bytes, key_part="", offset=0):
     if offset >= len(key_possible_bytes):
         return [key_part]
     for c in key_possible_bytes[offset]:
-        keys += all_keys(key_possible_bytes, key_part + c, offset+1)
+        keys += all_keys(key_possible_bytes, key_part + c, offset + 1)
     return keys
 
 
@@ -226,18 +235,17 @@ def print_keys(keys):
     if len(keys) > 10:
         print "..."
 
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # PRODUCE OUTPUT
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def produce_plaintexts(ciphertext, keys):
     """
     Produce plaintext variant for each possible key
     """
-    if os.path.exists(DIRNAME):
-        rmdir(DIRNAME)
+    cleanup()
     mkdir(DIRNAME)
-    
+
     for index, key in enumerate(keys):
         key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
         key_repr = repr(key)[1:-1].replace("/", "\\x2f")
@@ -247,6 +255,12 @@ def produce_plaintexts(ciphertext, keys):
         f = open(file_name, "wb")
         f.write(dexor(ciphertext, key))
         f.close()
+    return
+
+
+def cleanup():
+    if os.path.exists(DIRNAME):
+        rmdir(DIRNAME)
     return
 
 

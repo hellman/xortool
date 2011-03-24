@@ -5,6 +5,9 @@ import os
 import sys
 import string
 
+class MkdirError(Exception):
+    pass
+
 def load_file(filename):
     if filename == "-":
         return sys.stdin.read()
@@ -27,8 +30,7 @@ def mkdir(dirname):
     try:
         os.mkdir(dirname)
     except BaseException as err:
-        print "Error: Can't create directory '"+dirname+"':\n"+str(err)
-        sys.exit(2)
+        raise MkdirError(str(err))
     return
 
 
