@@ -21,7 +21,7 @@ Options:
 Example
 ---------------------
 
-<blockquote><pre>
+<pre>
 # xor is some external script to encrypt files
 tests $ xor -f /bin/ls -s "s3cret \xa9 keyS" > binary_xored 
 
@@ -53,12 +53,12 @@ secret_key
 tests $ md5sum xortool/0_secret_key /bin/ls
 29942e290876703169e1b614d0b4340a  xortool/0_secret_key
 29942e290876703169e1b614d0b4340a  /bin/ls
-</pre></blockquote>
+</pre>
 
 The most common use is just pass the encrypted file and
 the most frequent character (usually 00 for binaries and 20 for text files):
 
-<blockquote><pre>
+<pre>
 tests $ xortool tool_xored -c 20
 Probable key lengths:
    2:   5.6 %
@@ -76,7 +76,7 @@ Probable key lengths:
 Key-length can be 5*n
 1 possible key(s) of length 20:
 an0ther s3cret \xdd key
-</pre></blockquote>
+</pre>
 
 Author: hellman ( hellman1908@gmail.com )
 License: GNU General Public License v2 (http://opensource.org/licenses/gpl-2.0.php)
