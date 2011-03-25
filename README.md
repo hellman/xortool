@@ -48,10 +48,10 @@ tests $ python ../xortool.py binary_xored -l 10 -c 00
 1 possible key(s) of length 10:
 secret_key
 
-# decrypted ciphertexts are placed in ./xortool/Number_&lt;key repr&gt;
+# decrypted ciphertexts are placed in ./xortool_out/Number_&lt;key repr&gt;
 # ( have no better idea )
-tests $ md5sum xortool/0_secret_key /bin/ls
-29942e290876703169e1b614d0b4340a  xortool/0_secret_key
+tests $ md5sum xortool_out/0_secret_key /bin/ls
+29942e290876703169e1b614d0b4340a  xortool_out/0_secret_key
 29942e290876703169e1b614d0b4340a  /bin/ls
 </pre>
 
@@ -76,6 +76,8 @@ Key-length can be 5*n
 1 possible key(s) of length 20:
 an0ther s3cret \xdd key
 </pre>
+
+Here, the key is longer then default 32 limit:
 
 <pre>
 tests $ xortool ls_xored -c 00 -m 64
@@ -106,6 +108,12 @@ Key-length can be 3*n
 1 possible key(s) of length 33:
 really long s3cr3t k3y... PADDING
 </pre>
+
+So, if automated decryption fails, you can calibrate:
+
+- (-m) max length to try longer keys
+- (-l) selected length to see some interesting keys
+- (-c) the most frequent char to produce right plaintext
 
 Author: hellman ( hellman1908@gmail.com )
 

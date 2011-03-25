@@ -45,7 +45,7 @@ def rmdir(dirname):
             continue
         path = dirname + os.sep + f
         if os.path.isdir(path):
-            cleardir(path)
+            rmdir(path)
         else:
             os.unlink(path)
     os.rmdir(dirname)

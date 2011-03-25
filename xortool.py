@@ -26,7 +26,7 @@ import math
 from routine import *
 from args import parse_parameters, ArgError
 
-DIRNAME = 'xortool'  # here plaintexts will be placed
+DIRNAME = 'xortool_out'  # here plaintexts will be placed
 PARAMETERS = dict()
 
 def main():
@@ -150,11 +150,15 @@ def guess_and_print_divizors(fitnesses):
                 divizors_counts[number] += 1
     max_divizors = max(divizors_counts)
 
+    limit = 3
     ret = 2
     for number, divizors_count in enumerate(divizors_counts):
         if divizors_count == max_divizors:
             print "Key-length can be " + str(number) + "*n"
             ret = number
+            limit -= 1
+            if limit == 0:
+                return ret
     return ret
 
 
@@ -251,7 +255,7 @@ def produce_plaintexts(ciphertext, keys):
         key_repr = repr(key)[1:-1].replace("/", "\\x2f")
         if not is_linux():
             key_repr = alphanum(key)
-        file_name = os.path.join("xortool", key_index + "_" + key_repr)
+        file_name = os.path.join(DIRNAME, key_index + "_" + key_repr)
         f = open(file_name, "wb")
         f.write(dexor(ciphertext, key))
         f.close()
