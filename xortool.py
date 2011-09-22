@@ -10,7 +10,7 @@
 # Options:
 #  -l,--key-length     length of the key (integer)
 #  -c,--char           most frequent char (one char or hex code)
-#  -m,--max-keylen=32  maximum key length to probe (integer)
+#  -m,--max-keylen=65  maximum key length to probe (integer)
 #  -x,--hex            input is hex-encoded str
 # Examples:
 #   xortool file.bin
@@ -116,13 +116,15 @@ def calculate_fitnesses(text):
 
 def print_fitnesses(fitnesses):
     print "The most probable key lengths:"
-    fitness_sum = calculate_fitness_sum(fitnesses)
+    #fitness_sum = calculate_fitness_sum(fitnesses)
 
     # top sorted by fitness, but print sorted by length
     fitnesses.sort(key=lambda a: a[1], reverse=True)
     top10 = fitnesses[:10]
     best_fitness = top10[0][1]
     top10.sort(key=lambda a: a[0])
+
+    fitness_sum = calculate_fitness_sum(top10)
 
     for key_length, fitness in top10:
         s1 = str(key_length).rjust(4, " ")

@@ -10,7 +10,7 @@ class ArgError(Exception):
 
 PARAMETERS = {
     "input_is_hex": 0,
-    "max_key_length": 32,
+    "max_key_length": 65,
     "known_key_length": None,
     "most_frequent_char": None,
     "frequency_spread": 0,
