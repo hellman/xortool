@@ -17,11 +17,13 @@
 #   xortool -x -l 4 -c ' ' file.hex
 # ---------------------------------------------------------------
 # Author: hellman ( hellman1908@gmail.com )
+# License: GNU GPL v2 ( http://opensource.org/licenses/gpl-2.0.php )
 # ---------------------------------------------------------------
 
 import os
 import sys
 import math
+from colors import *
 
 from routine import *
 from args import parse_parameters, ArgError
@@ -43,11 +45,11 @@ def main():
 
         produce_plaintexts(ciphertext, probable_keys)
     except IOError as err:
-        print "[ERROR] Can't load file:\n\t", err
+        print C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET
     except ArgError as err:
-        print "[ERROR] Bad argument:\n\t", err
+        print C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET
     except MkdirError as err:
-        print "[ERROR] Can't create directory:\n\t", err
+        print C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET
     else:
         return
     cleanup()
@@ -113,11 +115,24 @@ def calculate_fitnesses(text):
 
 
 def print_fitnesses(fitnesses):
-    print "Probable key lengths:"
+    print "The most probable key lengths:"
     fitness_sum = calculate_fitness_sum(fitnesses)
-    for key_length, fitness in fitnesses:
-        print str(key_length).rjust(4, " ") + ":  ",
-        print round(100 * fitness * 1.0 / fitness_sum, 1), "%"
+
+    # top sorted by fitness, but print sorted by length
+    fitnesses.sort(key=lambda a: a[1], reverse=True)
+    top10 = fitnesses[:10]
+    best_fitness = top10[0][1]
+    top10.sort(key=lambda a: a[0])
+
+    for key_length, fitness in top10:
+        s1 = str(key_length).rjust(4, " ")
+        s2 = str(round(100 * fitness * 1.0 / fitness_sum, 1)) + "%"
+        if fitness == best_fitness:
+            print C_BEST_KEYLEN + s1 + C_RESET + ":  ",
+            print C_BEST_PROB + s2 + C_RESET
+        else:
+            print C_KEYLEN + s1 + C_RESET + ":  ",
+            print C_PROB + s2 + C_RESET
     return
 
 
@@ -154,7 +169,7 @@ def guess_and_print_divizors(fitnesses):
     ret = 2
     for number, divizors_count in enumerate(divizors_counts):
         if divizors_count == max_divizors:
-            print "Key-length can be " + str(number) + "*n"
+            print "Key-length can be " + C_DIV + str(number) + "*n" + C_RESET
             ret = number
             limit -= 1
             if limit == 0:
@@ -192,7 +207,7 @@ def guess_probable_keys(text):
     """
     probable_keys = []
     if PARAMETERS["most_frequent_char"] is None:
-        die("Most possible char is needed to guess the key!")
+        die(C_WARN + "Most possible char is needed to guess the key!" + C_RESET)
     else:
         probable_keys = guess_keys(text)
     return probable_keys
@@ -233,9 +248,12 @@ def print_keys(keys):
     if not keys:
         print "No keys guessed!"
         return
-    print "{0} possible key(s) of length {1}:".format(len(keys), len(keys[0]))
+    
+    s1 = C_COUNT + str(len(keys)) + C_RESET
+    s2 = C_COUNT + str(len(keys[0])) + C_RESET
+    print "{0} possible key(s) of length {1}:".format(s1, s2)
     for key in keys[:5]:
-        print repr(key)[1:-1]
+        print C_KEY + repr(key)[1:-1] + C_RESET
     if len(keys) > 10:
         print "..."
 
