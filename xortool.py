@@ -103,7 +103,9 @@ def calculate_fitnesses(text):
     fitnesses = []
     for key_length in range(1, PARAMETERS["max_key_length"] + 1):
         fitness = count_equals(text, key_length)
-        fitness = float(fitness) / (64 + key_length ** 0.5)
+
+        # smaller key-length with nearly the same fitness is preferable
+        fitness = float(fitness) / (PARAMETERS["max_key_length"] + key_length ** 1.5)
 
         if pprev < prev and prev > fitness:  # local maximum
             fitnesses += [(key_length - 1, prev)]
@@ -116,7 +118,6 @@ def calculate_fitnesses(text):
 
 def print_fitnesses(fitnesses):
     print "The most probable key lengths:"
-    #fitness_sum = calculate_fitness_sum(fitnesses)
 
     # top sorted by fitness, but print sorted by length
     fitnesses.sort(key=lambda a: a[1], reverse=True)
