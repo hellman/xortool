@@ -9,6 +9,8 @@ A tool to do some xor analysis:
 Usage
 ---------------------
 
+! *python3 is not supported, use python 2.x*
+
 <pre>
   xortool [-h|--help] [OPTIONS] [&lt;filename&gt;]
 Options:
