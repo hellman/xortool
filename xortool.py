@@ -23,6 +23,7 @@
 import os
 import sys
 import math
+import string
 from colors import *
 
 from routine import *
@@ -40,10 +41,21 @@ def main():
 
         update_key_length(ciphertext)
 
-        probable_keys = guess_probable_keys(ciphertext)
-        print_keys(probable_keys)
 
-        produce_plaintexts(ciphertext, probable_keys)
+        if  PARAMETERS["brute_chars"] != None:
+            try_chars = range(0,256)
+        elif PARAMETERS["brute_printable"] != None:
+            try_chars = map(lambda x : ord(x), string.printable)
+        elif PARAMETERS["most_frequent_char"] != None:
+            try_chars = [PARAMETERS["most_frequent_char"]]
+        else:
+            die(C_WARN + "Most possible char is needed to guess the key!" + C_RESET)
+        
+        (probable_keys, key_char_used) = guess_probable_keys_for_chars(ciphertext, try_chars)
+
+        print_keys(probable_keys)
+        produce_plaintexts(ciphertext, probable_keys, key_char_used)
+
     except IOError as err:
         print C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET
     except ArgError as err:
@@ -204,25 +216,28 @@ def chars_count_at_offset(text, key_length, offset):
 # KEYS GUESSING SECTION
 # -----------------------------------------------------------------------------
 
-def guess_probable_keys(text):
+def guess_probable_keys_for_chars(text, try_chars):
     """
-    Guess key if the most frequent char is known.
+    Guess keys for list of characters.
     """
     probable_keys = []
-    if PARAMETERS["most_frequent_char"] is None:
-        die(C_WARN + "Most possible char is needed to guess the key!" + C_RESET)
-    else:
-        probable_keys = guess_keys(text)
-    return probable_keys
+    key_char_used = {}
 
+    for c in try_chars:
+        keys = guess_keys(text, c)
+        for key in keys:
+            key_char_used[key] = c
+            if key not in probable_keys:
+                probable_keys.append(key)
 
-def guess_keys(text):
+    return (probable_keys, key_char_used)
+
+def guess_keys(text, most_char):
     """
     Generate all possible keys for key length
     and the most possible char
     """
     key_length = PARAMETERS["known_key_length"]
-    most_char = PARAMETERS["most_frequent_char"]
     key_possible_bytes = [[] for i in range(key_length)]
 
     for offset in range(key_length):  # each byte of key<
@@ -261,27 +276,70 @@ def print_keys(keys):
         print "..."
 
 # -----------------------------------------------------------------------------
+# RETURNS PERCENTAGE OF PRINABLE CHARS
+# -----------------------------------------------------------------------------
+
+def percentage_printable(text):
+    x = 0.0
+    for c in text:
+        if c in string.printable:
+            x+=1
+    return x/len(text)
+    
+
+# -----------------------------------------------------------------------------
 # PRODUCE OUTPUT
 # -----------------------------------------------------------------------------
 
-def produce_plaintexts(ciphertext, keys):
+def produce_plaintexts(ciphertext, keys, key_char_used):
     """
-    Produce plaintext variant for each possible key
+    Produce plaintext variant for each possible key,
+    creates csv files with keys, percentage of printable
+    characters and used most frequent character
     """
     cleanup()
     mkdir(DIRNAME)
+
+    # this is split up in two files since the
+    # key can contain all kinds of characters
+
+    fn_key_mapping = "filename-key.csv"
+    fn_perc_mapping = "filename-char_used-perc_printable.csv"
+
+    key_mapping = open(os.path.join(DIRNAME,  fn_key_mapping), "w")
+    perc_mapping = open(os.path.join(DIRNAME, fn_perc_mapping), "w")
+
+    key_mapping.write("file_name;key_repr\n")
+    perc_mapping.write("file_name;char_used;perc_printable\n")
+
+    threshold_printable = 95
+    count_printable = 0
 
     for index, key in enumerate(keys):
         key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
         key_repr = repr(key)[1:-1].replace("/", "\\x2f")
         if not is_linux():
             key_repr = alphanum(key)
-        file_name = os.path.join(DIRNAME, key_index + "_" + key_repr)
-        f = open(file_name, "wb")
-        f.write(dexor(ciphertext, key))
-        f.close()
-    return
+        file_name = os.path.join(DIRNAME, key_index + ".out")
 
+        dexored = dexor(ciphertext, key)
+        perc = round(100*percentage_printable(dexored))
+        if perc > threshold_printable:
+            count_printable += 1
+        key_mapping.write("{0};{1}\n".format(file_name, key_repr))
+        perc_mapping.write("{0};{1}\n".format(file_name, repr(key_char_used[key]), perc))
+        f = open(file_name, "wb")
+        f.write(dexored)
+        f.close()
+    key_mapping.close()
+    perc_mapping.close()
+
+    s1 = C_COUNT + str(count_printable) + C_RESET
+    s2 = C_COUNT + str(round(threshold_printable)) + C_RESET
+
+    print "Found {0} plaintexts with {1}%+ printable characters".format(s1, s2)
+    print "See files {0}, {1}".format(fn_key_mapping, fn_perc_mapping)
+    return
 
 def cleanup():
     if os.path.exists(DIRNAME):
