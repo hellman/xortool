@@ -14,10 +14,13 @@ Usage
 <pre>
   xortool [-h|--help] [OPTIONS] [&lt;filename&gt;]
 Options:
-  -l,--key-length     length of the key (integer)
-  -c,--char           most frequent char (one char or hex code)
-  -m,--max-keylen=32  maximum key length to probe (integer)
-  -x,--hex            input is hex-encoded str
+  -l,--key-length       length of the key (integer)
+  -c,--char             most possible char (one char or hex code)
+  -m,--max-keylen=32    maximum key length to probe (integer)
+  -x,--hex              input is hex-encoded str
+  -b,--brute-chars      brute-force all possible characters
+  -o,--brute-printable  same as -b but will only use printable
+                        characters for keys
 </pre>
 
 Example
