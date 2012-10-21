@@ -84,6 +84,15 @@ def update_parameters(options, arguments):
     except ValueError as err:
         raise ArgError(str(err))
 
+    if PARAMETERS["most_frequent_char"] and \
+       PARAMETERS["brute_printable"] or \
+       PARAMETERS["most_frequent_char"] and \
+       PARAMETERS["brute_chars"] or \
+       PARAMETERS["brute_printable"] and \
+       PARAMETERS["brute_chars"]:
+        raise ArgError("Only one out of -c, -b or -o should be used")
+
+
     if len(arguments) == 1:
         PARAMETERS["filename"] = arguments[0]
 

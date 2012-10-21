@@ -327,7 +327,7 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
         if perc > threshold_printable:
             count_printable += 1
         key_mapping.write("{0};{1}\n".format(file_name, key_repr))
-        perc_mapping.write("{0};{1}\n".format(file_name, repr(key_char_used[key]), perc))
+        perc_mapping.write("{0};{1};{2}\n".format(file_name, repr(key_char_used[key]), perc))
         f = open(file_name, "wb")
         f.write(dexored)
         f.close()
