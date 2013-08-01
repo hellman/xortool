@@ -19,10 +19,9 @@
 # Author: hellman ( hellman1908@gmail.com )
 # License: GNU GPL v2 ( http://opensource.org/licenses/gpl-2.0.php )
 # ---------------------------------------------------------------
+from operator import itemgetter
 
 import os
-import sys
-import math
 import string
 from colors import *
 
@@ -32,26 +31,27 @@ from args import parse_parameters, ArgError
 DIRNAME = 'xortool_out'  # here plaintexts will be placed
 PARAMETERS = dict()
 
+
 def main():
     global PARAMETERS
     try:
         PARAMETERS = parse_parameters()
-
         ciphertext = get_ciphertext()
-
         update_key_length(ciphertext)
 
-
-        if  PARAMETERS["brute_chars"] != None:
-            try_chars = range(0,256)
-        elif PARAMETERS["brute_printable"] != None:
-            try_chars = map(lambda x : ord(x), string.printable)
-        elif PARAMETERS["most_frequent_char"] != None:
+        if PARAMETERS["brute_chars"] is not None:
+            try_chars = range(256)
+        elif PARAMETERS["brute_printable"] is not None:
+            try_chars = map(ord, string.printable)
+        elif PARAMETERS["most_frequent_char"] is not None:
             try_chars = [PARAMETERS["most_frequent_char"]]
         else:
-            die(C_WARN + "Most possible char is needed to guess the key!" + C_RESET)
-        
-        (probable_keys, key_char_used) = guess_probable_keys_for_chars(ciphertext, try_chars)
+            die(C_WARN +
+                "Most possible char is needed to guess the key!" +
+                C_RESET)
+
+        (probable_keys,
+         key_char_used) = guess_probable_keys_for_chars(ciphertext, try_chars)
 
         print_keys(probable_keys)
         produce_plaintexts(ciphertext, probable_keys, key_char_used)
@@ -66,6 +66,7 @@ def main():
         return
     cleanup()
 
+
 # -----------------------------------------------------------------------------
 # LOADING CIPHERTEXT
 # -----------------------------------------------------------------------------
@@ -78,6 +79,7 @@ def get_ciphertext():
     if PARAMETERS["input_is_hex"]:
         ciphertext = decode_from_hex(ciphertext)
     return ciphertext
+
 
 # -----------------------------------------------------------------------------
 # KEYLENGTH GUESSING SECTION
@@ -101,7 +103,7 @@ def guess_key_length(text):
     """
     fitnesses = calculate_fitnesses(text)
     print_fitnesses(fitnesses)
-    guess_and_print_divizors(fitnesses)
+    guess_and_print_divisors(fitnesses)
 
     return get_max_fitnessed_key_length(fitnesses)
 
@@ -117,7 +119,8 @@ def calculate_fitnesses(text):
         fitness = count_equals(text, key_length)
 
         # smaller key-length with nearly the same fitness is preferable
-        fitness = float(fitness) / (PARAMETERS["max_key_length"] + key_length ** 1.5)
+        fitness = (float(fitness) /
+                   (PARAMETERS["max_key_length"] + key_length ** 1.5))
 
         if pprev < prev and prev > fitness:  # local maximum
             fitnesses += [(key_length - 1, prev)]
@@ -132,10 +135,10 @@ def print_fitnesses(fitnesses):
     print "The most probable key lengths:"
 
     # top sorted by fitness, but print sorted by length
-    fitnesses.sort(key=lambda a: a[1], reverse=True)
+    fitnesses.sort(key=itemgetter(1), reverse=True)
     top10 = fitnesses[:10]
     best_fitness = top10[0][1]
-    top10.sort(key=lambda a: a[0])
+    top10.sort(key=itemgetter(0))
 
     fitness_sum = calculate_fitness_sum(top10)
 
@@ -143,16 +146,16 @@ def print_fitnesses(fitnesses):
         s1 = str(key_length).rjust(4, " ")
         s2 = str(round(100 * fitness * 1.0 / fitness_sum, 1)) + "%"
         if fitness == best_fitness:
-            print C_BEST_KEYLEN + s1 + C_RESET + ":  ",
-            print C_BEST_PROB + s2 + C_RESET
+            print (C_BEST_KEYLEN + s1 + C_RESET + ":   "
+                   + C_BEST_PROB + s2 + C_RESET)
         else:
-            print C_KEYLEN + s1 + C_RESET + ":  ",
-            print C_PROB + s2 + C_RESET
+            print (C_KEYLEN + s1 + C_RESET + ":   "
+                   + C_PROB + s2 + C_RESET)
     return
 
 
 def calculate_fitness_sum(fitnesses):
-    return sum([f for (key_length, f) in fitnesses])
+    return sum([f[1] for f in fitnesses])
 
 
 def count_equals(text, key_length):
@@ -169,21 +172,21 @@ def count_equals(text, key_length):
     return equals_count
 
 
-def guess_and_print_divizors(fitnesses):
+def guess_and_print_divisors(fitnesses):
     """
-    Prints common divizors and returns the most common divizor
+    Prints common divisors and returns the most common divisor
     """
-    divizors_counts = [0 for i in range(PARAMETERS["max_key_length"] + 1)]
+    divisors_counts = [0] * (PARAMETERS["max_key_length"] + 1)
     for key_length, fitness in fitnesses:
         for number in range(3, key_length + 1):
             if key_length % number == 0:
-                divizors_counts[number] += 1
-    max_divizors = max(divizors_counts)
+                divisors_counts[number] += 1
+    max_divisors = max(divisors_counts)
 
     limit = 3
     ret = 2
-    for number, divizors_count in enumerate(divizors_counts):
-        if divizors_count == max_divizors:
+    for number, divisors_count in enumerate(divisors_counts):
+        if divisors_count == max_divisors:
             print "Key-length can be " + C_DIV + str(number) + "*n" + C_RESET
             ret = number
             limit -= 1
@@ -212,6 +215,7 @@ def chars_count_at_offset(text, key_length, offset):
             chars_count[c] = 1
     return chars_count
 
+
 # -----------------------------------------------------------------------------
 # KEYS GUESSING SECTION
 # -----------------------------------------------------------------------------
@@ -230,7 +234,8 @@ def guess_probable_keys_for_chars(text, try_chars):
             if key not in probable_keys:
                 probable_keys.append(key)
 
-    return (probable_keys, key_char_used)
+    return probable_keys, key_char_used
+
 
 def guess_keys(text, most_char):
     """
@@ -238,14 +243,14 @@ def guess_keys(text, most_char):
     and the most possible char
     """
     key_length = PARAMETERS["known_key_length"]
-    key_possible_bytes = [[] for i in range(key_length)]
+    key_possible_bytes = [[] for _ in range(key_length)]
 
     for offset in range(key_length):  # each byte of key<
         chars_count = chars_count_at_offset(text, key_length, offset)
         max_count = max(chars_count.values())
         for char in chars_count:
             if chars_count[char] >= max_count:
-                key_possible_bytes[offset] += chr(ord(char) ^ most_char)
+                key_possible_bytes[offset].append(chr(ord(char) ^ most_char))
 
     return all_keys(key_possible_bytes)
 
@@ -266,26 +271,27 @@ def print_keys(keys):
     if not keys:
         print "No keys guessed!"
         return
-    
+
     s1 = C_COUNT + str(len(keys)) + C_RESET
     s2 = C_COUNT + str(len(keys[0])) + C_RESET
-    print "{0} possible key(s) of length {1}:".format(s1, s2)
+    print "{} possible key(s) of length {}:".format(s1, s2)
     for key in keys[:5]:
         print C_KEY + repr(key)[1:-1] + C_RESET
     if len(keys) > 10:
         print "..."
 
+
 # -----------------------------------------------------------------------------
-# RETURNS PERCENTAGE OF PRINABLE CHARS
+# RETURNS PERCENTAGE OF PRINTABLE CHARS
 # -----------------------------------------------------------------------------
 
 def percentage_printable(text):
     x = 0.0
     for c in text:
         if c in string.printable:
-            x+=1
-    return x/len(text)
-    
+            x += 1
+    return x / len(text)
+
 
 # -----------------------------------------------------------------------------
 # PRODUCE OUTPUT
@@ -323,11 +329,13 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
         file_name = os.path.join(DIRNAME, key_index + ".out")
 
         dexored = dexor(ciphertext, key)
-        perc = round(100*percentage_printable(dexored))
+        perc = round(100 * percentage_printable(dexored))
         if perc > threshold_printable:
             count_printable += 1
-        key_mapping.write("{0};{1}\n".format(file_name, key_repr))
-        perc_mapping.write("{0};{1};{2}\n".format(file_name, repr(key_char_used[key]), perc))
+        key_mapping.write("{};{}\n".format(file_name, key_repr))
+        perc_mapping.write("{};{};{}\n".format(file_name,
+                                               repr(key_char_used[key]),
+                                               perc))
         f = open(file_name, "wb")
         f.write(dexored)
         f.close()
@@ -337,9 +345,10 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     s1 = C_COUNT + str(count_printable) + C_RESET
     s2 = C_COUNT + str(round(threshold_printable)) + C_RESET
 
-    print "Found {0} plaintexts with {1}%+ printable characters".format(s1, s2)
-    print "See files {0}, {1}".format(fn_key_mapping, fn_perc_mapping)
+    print "Found {} plaintexts with {}%+ printable characters".format(s1, s2)
+    print "See files {}, {}".format(fn_key_mapping, fn_perc_mapping)
     return
+
 
 def cleanup():
     if os.path.exists(DIRNAME):
