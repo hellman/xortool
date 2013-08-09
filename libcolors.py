@@ -24,18 +24,18 @@ def _main():
     for c in _keys_sorted_by_values(BASH_COLORS):
         c1 = color(c)
         c2 = color("white" if c != "white" else "black", bgcolor=c)
-        print c.ljust(9),
-        print c1 + "colored text" + color() + "   ",
-        print c2 + "background" + color()
+        print (c.ljust(10) +
+               c1 + "colored text" + color() + "    " +
+               c2 + "background" + color())
     print
 
     print header + "            " + "Attributes:             " + color()
     for c in _keys_sorted_by_values(BASH_ATTRIBUTES):
         c1 = color("red", attrs=c)
         c2 = color("white", attrs=c)
-        print c.ljust(12),
-        print c1 + "red text" + color() + "    ",
-        print c2 + "white text" + color()
+        print (c.ljust(13) +
+               c1 + "red text" + color() + "     " +
+               c2 + "white text" + color())
     print
     return
 
@@ -73,7 +73,7 @@ def is_bash():
 
 def _keys_sorted_by_values(adict):
     """Return list of the keys of @adict sorted by values."""
-    return sorted(adict.keys(), lambda x, y: cmp(adict[x], adict[y]))
+    return sorted(adict, key=adict.get)
 
 
 if __name__ == "__main__":

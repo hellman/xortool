@@ -5,8 +5,10 @@ import getopt
 
 from routine import *
 
+
 class ArgError(Exception):
     pass
+
 
 PARAMETERS = {
     "input_is_hex": 0,
@@ -19,23 +21,24 @@ PARAMETERS = {
     "filename": "-",  # stdin by default
 }
 
+
 def show_usage_and_exit():
-    print "xortool.py"
-    print "  A tool to do some xor analysis:"
-    print "  - guess the key length (based on count of equal chars)"
-    print "  - guess the key (base on knowledge of most probable char)"
-    print "Usage:"
-    print " ", os.path.basename(sys.argv[0]), "[-h|--help] [OPTIONS] [<filename>]"
-    print "Options:"
-    print " ", "-l,--key-length       length of the key (integer)"
-    print " ", "-c,--char             most possible char (one char or hex code)"
-    print " ", "-m,--max-keylen=32    maximum key length to probe (integer)"
-    print " ", "-x,--hex              input is hex-encoded str"
-    print " ", "-b,--brute-chars      brute force all possible characters"
-    print " ", "-o,--brute-printable  same as -b but will only use printable"
-    print " ", "                      characters for keys"
+    print """xortool.py
+A tool to do some xor analysis:
+  - guess the key length (based on count of equal chars)
+  - guess the key (base on knowledge of most probable char)
+Usage:
+  {} [-h|--help] [OPTIONS] [<filename>]
+Options:
+  -l,--key-length       length of the key (integer)
+  -c,--char             most possible char (one char or hex code)
+  -m,--max-keylen=32    maximum key length to probe (integer)
+  -x,--hex              input is hex-encoded str
+  -b,--brute-chars      brute force all possible characters
+  -o,--brute-printable  same as -b but will only use printable
+                        characters for keys
+                        """.format(os.path.basename(sys.argv[0]))
     sys.exit(1)
-    return
 
 
 def parse_parameters():
@@ -50,9 +53,17 @@ def parse_parameters():
 def get_options_and_arguments(program_arguments):
     options, arguments = [], []
     try:
-        options, arguments = getopt.gnu_getopt(program_arguments, "l:c:s:m:xbo",
-                            ["key-length=", "char=", "spread=", "max-keylen=",
-                             "hex", "help", "usage","brute-chars", "brute-printable"])
+        options, arguments = getopt.gnu_getopt(program_arguments,
+                                               "l:c:s:m:xbo",
+                                               ["key-length=",
+                                                "char=",
+                                                "spread=",
+                                                "max-keylen=",
+                                                "hex",
+                                                "help",
+                                                "usage",
+                                                "brute-chars",
+                                                "brute-printable"])
 
     except getopt.GetoptError:
         show_usage_and_exit()
@@ -84,14 +95,12 @@ def update_parameters(options, arguments):
     except ValueError as err:
         raise ArgError(str(err))
 
-    if PARAMETERS["most_frequent_char"] and \
-       PARAMETERS["brute_printable"] or \
-       PARAMETERS["most_frequent_char"] and \
-       PARAMETERS["brute_chars"] or \
-       PARAMETERS["brute_printable"] and \
-       PARAMETERS["brute_chars"]:
+    if ((PARAMETERS["most_frequent_char"] and PARAMETERS["brute_printable"]
+         or
+         PARAMETERS["most_frequent_char"] and PARAMETERS["brute_chars"]
+         or
+         PARAMETERS["brute_printable"] and PARAMETERS["brute_chars"])):
         raise ArgError("Only one out of -c, -b or -o should be used")
-
 
     if len(arguments) == 1:
         PARAMETERS["filename"] = arguments[0]
