@@ -27,7 +27,7 @@ Example
 ---------------------
 
 <pre>
-# xor is some external script to encrypt files
+# xor is tools/xor.py
 tests $ xor -f /bin/ls -s "secret_key" > binary_xored
 
 tests $ xortool binary_xored
