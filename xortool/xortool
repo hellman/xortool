@@ -23,10 +23,10 @@ from operator import itemgetter
 
 import os
 import string
-from colors import *
+from xortool.colors import *
 
-from routine import *
-from args import parse_parameters, ArgError
+from xortool.routine import *
+from xortool.args import parse_parameters, ArgError
 
 DIRNAME = 'xortool_out'  # here plaintexts will be placed
 PARAMETERS = dict()
