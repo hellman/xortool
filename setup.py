@@ -4,7 +4,7 @@
 from distutils.core import setup
 
 setup(name='xortool',
-      version='1.0',
+      version='0.95',
       description='Tool for xor cipher analysis',
 
       author='hellman',
