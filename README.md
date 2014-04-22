@@ -106,4 +106,4 @@ So, if automated decryption fails, you can calibrate:
 
 Author: hellman ( hellman1908@gmail.com )
 
-License: GNU General Public License v2 (http://opensource.org/licenses/gpl-2.0.php)
+License: MIT License (opensource.org/licenses/MIT)
