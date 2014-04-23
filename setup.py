@@ -3,8 +3,10 @@
 
 from distutils.core import setup
 
+import xortool
+
 setup(name='xortool',
-      version='0.95',
+      version=xortool.__version__,
 
       author='hellman',
       author_email='hellman1908@gmail.com',
