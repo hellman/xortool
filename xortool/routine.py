@@ -67,7 +67,9 @@ def parse_char(ch):
         return ord(ch)
     if ch[0:2] == "\\x":
         ch = ch[2:]
-    return int(ch, 16)
+    if not ch:
+        raise ValueError("Empty char")
+    return ord(chr(int(ch, 16)))
 
 
 def dexor(text, key):
