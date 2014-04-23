@@ -17,7 +17,7 @@
 #   xortool -x -l 4 -c ' ' file.hex
 # ---------------------------------------------------------------
 # Author: hellman ( hellman1908@gmail.com )
-# License: GNU GPL v2 ( http://opensource.org/licenses/gpl-2.0.php )
+# License: MIT License ( http://opensource.org/licenses/MIT )
 # ---------------------------------------------------------------
 from operator import itemgetter
 
