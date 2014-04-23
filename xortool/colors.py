@@ -4,7 +4,7 @@
 from libcolors import color
 
 C_RESET = color()
-C_FATAL = color("white", "red")
+C_FATAL = color("red")
 C_WARN = color("yellow")
 
 C_KEYLEN = color("green")
