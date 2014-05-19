@@ -57,7 +57,7 @@ def main():
             try_chars = range(256)
         elif PARAMETERS["brute_printable"]:
             try_chars = map(ord, string.printable)
-        elif PARAMETERS["most_frequent_char"]:
+        elif PARAMETERS["most_frequent_char"] != None:
             try_chars = [PARAMETERS["most_frequent_char"]]
         else:
             die(C_WARN +
