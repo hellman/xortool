@@ -11,7 +11,7 @@ Usage
 
 ! *python3 is not supported, use python 2.x*
 
-<pre>
+```
   xortool [-h|--help] [OPTIONS] [&lt;filename&gt;]
 Options:
   -l,--key-length       length of the key (integer)
@@ -21,13 +21,13 @@ Options:
   -b,--brute-chars      brute-force all possible characters
   -o,--brute-printable  same as -b but will only use printable
                         characters for keys
-</pre>
+```
 
 Example
 ---------------------
 
-<pre>
-# xor is tools/xor.py
+```bash
+# xor is xortool/xortool-xor
 tests $ xor -f /bin/ls -s "secret_key" > binary_xored
 
 tests $ xortool binary_xored
@@ -56,11 +56,11 @@ secret_key
 tests $ md5sum xortool_out/0_secret_key /bin/ls
 29942e290876703169e1b614d0b4340a  xortool_out/0_secret_key
 29942e290876703169e1b614d0b4340a  /bin/ls
-</pre>
+```
 
 The most common use is to pass just the encrypted file and the most frequent character (usually 00 for binaries and 20 for text files) - length will be automatically chosen:
 
-<pre>
+```bash
 tests $ xortool tool_xored -c 20
 The most probable key lengths:
    2:   5.6%
@@ -76,11 +76,11 @@ The most probable key lengths:
 Key-length can be 5*n
 1 possible key(s) of length 20:
 an0ther s3cret \xdd key
-</pre>
+```
 
 Here, the key is longer then default 32 limit:
 
-<pre>
+```bash
 tests $ xortool ls_xored -c 00 -m 64
 The most probable key lengths:
    3:   3.3%
@@ -96,13 +96,13 @@ The most probable key lengths:
 Key-length can be 3*n
 1 possible key(s) of length 33:
 really long s3cr3t k3y... PADDING
-</pre>
+```
 
 So, if automated decryption fails, you can calibrate:
 
-- (-m) max length to try longer keys
-- (-l) selected length to see some interesting keys
-- (-c) the most frequent char to produce right plaintext
+- (`-m`) max length to try longer keys
+- (`-l`) selected length to see some interesting keys
+- (`-c`) the most frequent char to produce right plaintext
 
 Author: hellman ( hellman1908@gmail.com )
 
