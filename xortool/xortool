@@ -49,7 +49,7 @@ class AnalysisError(Exception):
 def main():
     global PARAMETERS
     try:
-        PARAMETERS = parse_parameters(__doc__, xortool.__version__)
+        PARAMETERS = parse_parameters()
         ciphertext = get_ciphertext()
         update_key_length(ciphertext)
 
