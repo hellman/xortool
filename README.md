@@ -12,7 +12,7 @@ Usage
 ! *python3 is not supported, use python 2.x*
 
 ```
-  xortool [-h|--help] [OPTIONS] [&lt;filename&gt;]
+  xortool [-h|--help] [OPTIONS] [<filename>]
 Options:
   -l,--key-length       length of the key (integer)
   -c,--char             most possible char (one char or hex code)
@@ -51,7 +51,7 @@ tests $ xortool binary_xored -l 10 -c 00
 1 possible key(s) of length 10:
 secret_key
 
-# decrypted ciphertexts are placed in ./xortool_out/Number_&lt;key repr&gt;
+# decrypted ciphertexts are placed in ./xortool_out/Number_<key repr>
 # ( have no better idea )
 tests $ md5sum xortool_out/0_secret_key /bin/ls
 29942e290876703169e1b614d0b4340a  xortool_out/0_secret_key
