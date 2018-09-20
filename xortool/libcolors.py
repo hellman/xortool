@@ -18,25 +18,25 @@ BASH_BGCOLORS = {"black": "40", "red": "41", "green": "42", "yellow": "43",
 
 def _main():
     header = color("white", "black", "dark")
-    print
+    print();
 
-    print header + "       " + "Colors and backgrounds:      " + color()
+    print(header + "       " + "Colors and backgrounds:      " + color())
     for c in _keys_sorted_by_values(BASH_COLORS):
         c1 = color(c)
         c2 = color("white" if c != "white" else "black", bgcolor=c)
-        print (c.ljust(10) +
+        print((c.ljust(10) +
                c1 + "colored text" + color() + "    " +
-               c2 + "background" + color())
-    print
+               c2 + "background" + color()))
+    print()
 
-    print header + "            " + "Attributes:             " + color()
+    print(header + "            " + "Attributes:             " + color())
     for c in _keys_sorted_by_values(BASH_ATTRIBUTES):
         c1 = color("red", attrs=c)
         c2 = color("white", attrs=c)
-        print (c.ljust(13) +
+        print((c.ljust(13) +
                c1 + "red text" + color() + "     " +
-               c2 + "white text" + color())
-    print
+               c2 + "white text" + color()))
+    print()
     return
 
 

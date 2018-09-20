@@ -15,6 +15,7 @@ example: xor -s lol -h 414243 -f /etc/passwd
 author: hellman ( hellman1908@gmail.com )
 """
 
+from __future__ import print_function
 import sys
 import string
 import getopt
@@ -43,8 +44,8 @@ def main():
         if not datas:
             raise getopt.GetoptError("no data given")
     except getopt.GetoptError as e:
-        print >>sys.stderr, "error:", e
-        print >>sys.stderr, __doc__
+        print("error:", e, file=sys.stderr)
+        print(__doc__, file=sys.stderr)
         quit()
 
     sys.stdout.write(xor(datas, nocycle=nocycle))
