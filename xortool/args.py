@@ -3,7 +3,7 @@
 
 from docopt import docopt
 
-from routine import parse_char
+from xortool.routine import parse_char
 
 
 class ArgError(Exception):

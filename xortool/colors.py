@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-from libcolors import color
+from xortool.libcolors import color
 
 C_RESET = color()
 C_FATAL = color("red")

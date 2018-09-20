@@ -81,7 +81,7 @@ def dexor(text, key):
 
 
 def die(exitMessage, exitCode=1):
-    print exitMessage
+    print(exitMessage)
     sys.exit(exitCode)
 
 

@@ -71,13 +71,13 @@ def main():
         produce_plaintexts(ciphertext, probable_keys, key_char_used)
 
     except IOError as err:
-        print C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET
+        print(C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET)
     except ArgError as err:
-        print C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET
+        print(C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET)
     except MkdirError as err:
-        print C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET
+        print(C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET)
     except AnalysisError as err:
-        print C_FATAL + "[ERROR] Analysis error:\n\t", err, C_RESET
+        print(C_FATAL + "[ERROR] Analysis error:\n\t", err, C_RESET)
     else:
         return
     cleanup()
@@ -153,7 +153,7 @@ def calculate_fitnesses(text):
 
 
 def print_fitnesses(fitnesses):
-    print "The most probable key lengths:"
+    print("The most probable key lengths:")
 
     # top sorted by fitness, but print sorted by length
     fitnesses.sort(key=itemgetter(1), reverse=True)
@@ -167,11 +167,11 @@ def print_fitnesses(fitnesses):
         s1 = str(key_length).rjust(4, " ")
         s2 = str(round(100 * fitness * 1.0 / fitness_sum, 1)) + "%"
         if fitness == best_fitness:
-            print (C_BEST_KEYLEN + s1 + C_RESET + ":   "
-                   + C_BEST_PROB + s2 + C_RESET)
+            print((C_BEST_KEYLEN + s1 + C_RESET + ":   "
+                   + C_BEST_PROB + s2 + C_RESET))
         else:
-            print (C_KEYLEN + s1 + C_RESET + ":   "
-                   + C_PROB + s2 + C_RESET)
+            print((C_KEYLEN + s1 + C_RESET + ":   "
+                   + C_PROB + s2 + C_RESET))
     return
 
 
@@ -208,7 +208,7 @@ def guess_and_print_divisors(fitnesses):
     ret = 2
     for number, divisors_count in enumerate(divisors_counts):
         if divisors_count == max_divisors:
-            print "Key-length can be " + C_DIV + str(number) + "*n" + C_RESET
+            print("Key-length can be " + C_DIV + str(number) + "*n" + C_RESET)
             ret = number
             limit -= 1
             if limit == 0:
@@ -290,16 +290,16 @@ def all_keys(key_possible_bytes, key_part="", offset=0):
 
 def print_keys(keys):
     if not keys:
-        print "No keys guessed!"
+        print("No keys guessed!")
         return
 
     s1 = C_COUNT + str(len(keys)) + C_RESET
     s2 = C_COUNT + str(len(keys[0])) + C_RESET
-    print "{} possible key(s) of length {}:".format(s1, s2)
+    print("{} possible key(s) of length {}:".format(s1, s2))
     for key in keys[:5]:
-        print C_KEY + repr(key)[1:-1] + C_RESET
+        print(C_KEY + repr(key)[1:-1] + C_RESET)
     if len(keys) > 10:
-        print "..."
+        print("...")
 
 
 # -----------------------------------------------------------------------------
@@ -366,8 +366,8 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     s1 = C_COUNT + str(count_printable) + C_RESET
     s2 = C_COUNT + str(round(threshold_printable)) + C_RESET
 
-    print "Found {} plaintexts with {}%+ printable characters".format(s1, s2)
-    print "See files {}, {}".format(fn_key_mapping, fn_perc_mapping)
+    print("Found {} plaintexts with {}%+ printable characters".format(s1, s2))
+    print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
     return
 
 
