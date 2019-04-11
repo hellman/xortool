@@ -7,9 +7,9 @@ xortool
   - guess the key (base on knowledge of most frequent char)
 
 Usage:
-  xortool [-x] [-m MAX-LEN] [FILE]
-  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [FILE]
-  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [FILE]
+  xortool [-x] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
+  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [FILE]
+  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [FILE]
   xortool [-h | --help]
   xortool --version
 
@@ -20,12 +20,25 @@ Options:
   -c CHAR, --char=CHAR              most frequent char (one char or hex code)
   -b --brute-chars                  brute force all possible most frequent chars
   -o --brute-printable              same as -b but will only check printable chars
+  -f --filter-output                filter outputs based on the charset
+  -t CHARSET --text-charset=CHARSET target text character set [default: printable]
   -h --help                         show this help
+
+Notes:
+  Text character set:
+    * Pre-defined sets: printable, base32, base64
+    * Custom sets:
+      - a: lowercase chars
+      - A: uppercase chars
+      - 1: digits
+      - !: special chars
+      - *: printable chars
 
 Examples:
   xortool file.bin
   xortool -l 11 -c 20 file.bin
   xortool -x -c ' ' file.hex
+  xortool -b -f -l 23 -t base64 message.enc
 """
 
 from operator import itemgetter
@@ -303,13 +316,14 @@ def print_keys(keys):
 
 
 # -----------------------------------------------------------------------------
-# RETURNS PERCENTAGE OF PRINTABLE CHARS
+# RETURNS PERCENTAGE OF VALID TEXT CHARS
 # -----------------------------------------------------------------------------
 
-def percentage_printable(text):
+def percentage_valid(text):
+    global PARAMETERS
     x = 0.0
     for c in text:
-        if c in string.printable:
+        if c in PARAMETERS["text_charset"]:
             x += 1
     return x / len(text)
 
@@ -321,9 +335,11 @@ def percentage_printable(text):
 def produce_plaintexts(ciphertext, keys, key_char_used):
     """
     Produce plaintext variant for each possible key,
-    creates csv files with keys, percentage of printable
+    creates csv files with keys, percentage of valid
     characters and used most frequent character
     """
+    global PARAMETERS
+    
     cleanup()
     mkdir(DIRNAME)
 
@@ -331,16 +347,16 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     # key can contain all kinds of characters
 
     fn_key_mapping = "filename-key.csv"
-    fn_perc_mapping = "filename-char_used-perc_printable.csv"
+    fn_perc_mapping = "filename-char_used-perc_valid.csv"
 
     key_mapping = open(os.path.join(DIRNAME,  fn_key_mapping), "w")
     perc_mapping = open(os.path.join(DIRNAME, fn_perc_mapping), "w")
 
     key_mapping.write("file_name;key_repr\n")
-    perc_mapping.write("file_name;char_used;perc_printable\n")
+    perc_mapping.write("file_name;char_used;perc_valid\n")
 
-    threshold_printable = 95
-    count_printable = 0
+    threshold_valid = 95
+    count_valid = 0
 
     for index, key in enumerate(keys):
         key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
@@ -350,23 +366,25 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
         file_name = os.path.join(DIRNAME, key_index + ".out")
 
         dexored = dexor(ciphertext, key)
-        perc = round(100 * percentage_printable(dexored))
-        if perc > threshold_printable:
-            count_printable += 1
+        perc = round(100 * percentage_valid(dexored))
+        if perc > threshold_valid:
+            count_valid += 1
         key_mapping.write("{};{}\n".format(file_name, key_repr))
         perc_mapping.write("{};{};{}\n".format(file_name,
                                                repr(key_char_used[key]),
                                                perc))
-        f = open(file_name, "wb")
-        f.write(dexored)
-        f.close()
+        if not PARAMETERS["filter_output"] or \
+            (PARAMETERS["filter_output"] and perc > threshold_valid):
+            f = open(file_name, "wb")
+            f.write(dexored)
+            f.close()
     key_mapping.close()
     perc_mapping.close()
 
-    s1 = C_COUNT + str(count_printable) + C_RESET
-    s2 = C_COUNT + str(round(threshold_printable)) + C_RESET
+    s1 = C_COUNT + str(count_valid) + C_RESET
+    s2 = C_COUNT + str(round(threshold_valid)) + C_RESET
 
-    print("Found {} plaintexts with {}%+ printable characters".format(s1, s2))
+    print("Found {} plaintexts with {}%+ valid characters".format(s1, s2))
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
     return
 
