@@ -38,8 +38,6 @@ def main():
                 nonewline = True
             else:
                 v = arg_data(c, val)
-                if v is None:
-                    raise getopt.GetoptError("unknown option %s" % c)
                 datas.append(v)
         if not datas:
             raise getopt.GetoptError("no data given")
@@ -48,24 +46,23 @@ def main():
         print(__doc__, file=sys.stderr)
         quit()
 
-    sys.stdout.write(xor(datas, nocycle=nocycle))
+    sys.stdout.buffer.write(xor(datas, nocycle=nocycle))
     if not nonewline:
         sys.stdout.write("\n")
 
 
 def xor(args, nocycle=False):
-    maxlen = max(map(len, args))
-    res = [0] * maxlen
-    if nocycle:
-        for s in args:
-            for i in xrange(len(s)):
-                res[i] ^= ord(s[i])
-    else:
-        for s in args:
-            slen = len(s)
-            for i in xrange(maxlen):
-                res[i] ^= ord(s[i % slen])
-    return "".join(map(chr, res))
+    # Sort by len DESC
+    args.sort(key=len, reverse=True)
+    res = bytearray(args.pop(0))
+    maxlen = len(res)
+
+    for s in args:
+        slen = len(s)
+        srange = range(slen if nocycle else maxlen)
+        for i in srange:
+            res[i] ^= s[i % slen]
+    return res
 
 
 def from_str(s):
@@ -82,18 +79,7 @@ def from_str(s):
             res += s[i]
             i += 1
     res += s[i:]
-    return res
-
-
-def from_hex(s):
-    res = ""
-    for c in s:
-        if c in HEXES:
-            res += c
-        elif c in string.ascii_letters:
-            raise ValueError("Bad splitters (alphanum)")
-    return res.decode("hex")
-
+    return str.encode(res)
 
 def from_file(s):
     if s == "-":
@@ -105,12 +91,12 @@ def arg_data(opt, s):
     if opt == "-s":
         return from_str(s)
     elif opt == "-r":
-        return s
+        return str.encode(s)
     elif opt == "-h":
-        return from_hex(s)
+        return bytes.fromhex(s)
     elif opt == "-f":
         return from_file(s)
-    return None
+    raise getopt.GetoptError("unknown option -%s" % opt)
 
 
 if __name__ == '__main__':
