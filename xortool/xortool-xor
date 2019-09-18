@@ -23,9 +23,6 @@ import string
 import sys
 
 
-HEXES = set("0123456789abcdefABCDEF")
-
-
 def main():
     cycle = True
     newline = True
@@ -71,20 +68,10 @@ def xor(args, cycle=True):
 
 
 def from_str(s):
-    res = []
-    i = 0
-    while True:
-        if i + 4 > len(s):
-            break
-
-        if s[i] == "\\" and s[i+1] == "x" and s[i+2] in HEXES and s[i+3] in HEXES:
-            res.append(int(s[i+2:i+4], 16))
-            i += 4
-        else:
-            res.append(ord(s[i]))
-            i += 1
-    res += s[i:].encode("ascii")
-    return bytes(res)
+    res = b''
+    for char in s.encode("utf-8").decode("unicode_escape"):
+        res += bytes([ord(char)])
+    return res
 
 
 def from_file(s):
