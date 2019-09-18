@@ -56,19 +56,6 @@ def decode_from_hex(text):
     return bytes.fromhex(only_hex_digits)
 
 
-def parse_char(ch):
-    """
-    'A' or '\x41' or '41'
-    """
-    if len(ch) == 1:
-        return ord(ch)
-    if ch[0:2] == "\\x":
-        ch = ch[2:]
-    if not ch:
-        raise ValueError("Empty char")
-    return int(ch, 16)
-
-
 def dexor(text, key):
     mod = len(key)
     return bytes(key[index % mod] ^ char for index, char in enumerate(text))
