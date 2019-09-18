@@ -115,9 +115,7 @@ def main():
 # -----------------------------------------------------------------------------
 
 def get_ciphertext():
-    """
-    Load ciphertext from a file or stdin and hex-decode if needed
-    """
+    """Load ciphertext from a file or stdin and hex-decode if needed"""
     ciphertext = load_file(PARAMETERS["filename"])
     if PARAMETERS["input_is_hex"]:
         ciphertext = decode_from_hex(ciphertext)
@@ -130,7 +128,8 @@ def get_ciphertext():
 
 def guess_key_length(text):
     """
-    Try key lengths from 1 to max_key_length and print local maximums.
+    Try key lengths from 1 to max_key_length and print local maximums
+
     Set key_length to the most possible if it's not set by user.
     """
     fitnesses = calculate_fitnesses(text)
@@ -143,9 +142,7 @@ def guess_key_length(text):
 
 
 def calculate_fitnesses(text):
-    """
-    Calc. fitnesses for each keylen
-    """
+    """Calculate fitnesses for each keylen"""
     prev = 0
     pprev = 0
     fitnesses = []
@@ -192,9 +189,7 @@ def calculate_fitness_sum(fitnesses):
 
 
 def count_equals(text, key_length):
-    """
-    count equal chars count for each offset and sum them
-    """
+    """Count equal chars count for each offset and sum them"""
     equals_count = 0
     if key_length >= len(text):
         return 0
