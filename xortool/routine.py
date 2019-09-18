@@ -13,17 +13,13 @@ class MkdirError(Exception):
 def load_file(filename):
     if filename == "-":
         return sys.stdin.read()
-    fd = open(filename, "rb")
-    contents = fd.read()
-    fd.close()
-    return contents
+    with open(filename, "rb") as fd:
+        return fd.read()
 
 
 def save_file(filename, data):
-    fd = open(filename, "wb")
-    fd.write(data)
-    fd.close()
-    return
+    with open(filename, "wb") as fd:
+        fd.write(data)
 
 
 def mkdir(dirname):
@@ -33,7 +29,6 @@ def mkdir(dirname):
         os.mkdir(dirname)
     except BaseException as err:
         raise MkdirError(str(err))
-    return
 
 
 def rmdir(dirname):
@@ -41,9 +36,8 @@ def rmdir(dirname):
         dirname = dirname[:-1]
     if os.path.islink(dirname):
         return  # do not clear link - we can get out of dir
-    files = os.listdir(dirname)
-    for f in files:
-        if f == '.' or f == '..':
+    for f in os.listdir(dirname):
+        if f in ('.', '..'):
             continue
         path = dirname + os.sep + f
         if os.path.isdir(path):
@@ -51,7 +45,6 @@ def rmdir(dirname):
         else:
             os.unlink(path)
     os.rmdir(dirname)
-    return
 
 
 def decode_from_hex(text):
@@ -79,7 +72,7 @@ def is_linux():
 def alphanum(s):
     lst = list(s)
     for index, char in enumerate(lst):
-        if char in (string.letters + string.digits):
+        if char in string.ascii_letters + string.digits:
             continue
         lst[index] = char.encode("hex")
     return "".join(lst)
