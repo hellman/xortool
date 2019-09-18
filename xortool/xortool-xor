@@ -44,8 +44,7 @@ def main():
             elif c in ("-n", "--no-newline"):
                 newline = False
             else:
-                v = arg_data(c, val)
-                datas.append(v)
+                datas.append(arg_data(c, val))
         if not datas:
             raise getopt.GetoptError("no data given")
     except getopt.GetoptError as e:
