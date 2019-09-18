@@ -25,16 +25,16 @@ HEXES = set("0123456789abcdefABCDEF")
 
 
 def main():
-    nocycle = False
-    nonewline = False
+    cycle = True
+    newline = True
     try:
         opts, args = getopt.getopt(sys.argv[1:], "n" + DATA_OPTS, ["no-cycle", "nc"])
         datas = []
         for c, val in opts:
             if c in ("--no-cycle", "--nc"):
-                nocycle = True
+                cycle = False
             elif c == "-n":
-                nonewline = True
+                newline = False
             else:
                 v = arg_data(c, val)
                 datas.append(v)
@@ -45,12 +45,12 @@ def main():
         print(__doc__, file=sys.stderr)
         quit()
 
-    sys.stdout.buffer.write(xor(datas, nocycle=nocycle))
-    if not nonewline:
+    sys.stdout.buffer.write(xor(datas, cycle=cycle))
+    if newline:
         sys.stdout.buffer.write(b"\n")
 
 
-def xor(args, nocycle=False):
+def xor(args, cycle=True):
     # Sort by len DESC
     args.sort(key=len, reverse=True)
     res = bytearray(args.pop(0))
@@ -58,8 +58,7 @@ def xor(args, nocycle=False):
 
     for s in args:
         slen = len(s)
-        srange = range(slen if nocycle else maxlen)
-        for i in srange:
+        for i in range(maxlen if cycle else slen):
             res[i] ^= s[i % slen]
     return res
 
