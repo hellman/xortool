@@ -76,7 +76,7 @@ def dexor(text, key):
     ret = list(text)
     mod = len(key)
     for index, char in enumerate(ret):
-        ret[index] = chr(ord(char) ^ ord(key[index % mod]))
+        ret[index] = chr(char ^ ord(key[index % mod]))
     return "".join(ret)
 
 
