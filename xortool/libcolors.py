@@ -15,7 +15,7 @@ BASH_BGCOLORS = {"black": "40", "red": "41", "green": "42", "yellow": "43",
 
 def _main():
     header = color("white", "black", "dark")
-    print();
+    print()
 
     print(header + "       " + "Colors and backgrounds:      " + color())
     for c in _keys_sorted_by_values(BASH_COLORS):
@@ -34,7 +34,6 @@ def _main():
                c1 + "red text" + color() + "     " +
                c2 + "white text" + color()))
     print()
-    return
 
 
 def color(color=None, bgcolor=None, attrs=None):
@@ -50,16 +49,14 @@ def color(color=None, bgcolor=None, attrs=None):
             ret += ";" + BASH_ATTRIBUTES[attr]
 
     if color:
-        if color in BASH_COLORS:
-            ret += ";" + BASH_COLORS[color]
-        else:
+        if color not in BASH_COLORS:
             raise ValueError("Unknown color: " + color)
+        ret += ";" + BASH_COLORS[color]
 
     if bgcolor:
-        if bgcolor in BASH_BGCOLORS:
-            ret += ";" + BASH_BGCOLORS[bgcolor]
-        else:
+        if bgcolor not in BASH_BGCOLORS:
             raise ValueError("Unknown background color: " + bgcolor)
+        ret += ";" + BASH_BGCOLORS[bgcolor]
 
     return ret + "m"
 
