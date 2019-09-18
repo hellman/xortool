@@ -15,10 +15,9 @@ example: xor -s lol -h 414243 -f /etc/passwd
 author: hellman ( hellman1908@gmail.com )
 """
 
-from __future__ import print_function
-import sys
-import string
 import getopt
+import string
+import sys
 
 
 DATA_OPTS = "s:r:h:f:"
