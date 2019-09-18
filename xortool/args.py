@@ -25,14 +25,20 @@ def parse_char(ch):
     return int(ch, 16)
 
 
+def parse_int(i):
+    if i is None:
+        return None
+    return int(i)
+
+
 def parse_parameters(doc, version):
     p = docopt(doc, version=version)
     p = {k.lstrip("-"): v for k, v in p.items()}
     try:
         return {
             "input_is_hex": bool(p["hex"]),
-            "max_key_length": int(p["max-keylen"]),
-            "known_key_length": int(p["key-length"]) if p["key-length"] else None,
+            "max_key_length": parse_int(p["max-keylen"]),
+            "known_key_length": parse_int(p["key-length"]),
             "most_frequent_char": parse_char(p["char"]),
             "brute_chars": bool(p["brute-chars"]),
             "brute_printable": bool(p["brute-printable"]),
