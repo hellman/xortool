@@ -36,16 +36,16 @@ def parse_parameters(doc, version):
     p = {k.lstrip("-"): v for k, v in p.items()}
     try:
         return {
-            "input_is_hex": bool(p["hex"]),
-            "max_key_length": parse_int(p["max-keylen"]),
-            "known_key_length": parse_int(p["key-length"]),
-            "most_frequent_char": parse_char(p["char"]),
             "brute_chars": bool(p["brute-chars"]),
             "brute_printable": bool(p["brute-printable"]),
-            "text_charset": get_charset(p["text-charset"]),
-            "frequency_spread": 0,  # to be removed
             "filename": p["FILE"] if p["FILE"] else "-",  # stdin by default
             "filter_output": bool(p["filter-output"]),
+            "frequency_spread": 0,  # to be removed
+            "input_is_hex": bool(p["hex"]),
+            "known_key_length": parse_int(p["key-length"]),
+            "max_key_length": parse_int(p["max-keylen"]),
+            "most_frequent_char": parse_char(p["char"]),
+            "text_charset": get_charset(p["text-charset"]),
         }
     except ValueError as err:
         raise ArgError(str(err))
