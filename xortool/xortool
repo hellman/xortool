@@ -68,9 +68,8 @@ class AnalysisError(Exception):
 
 
 def main():
-    global PARAMETERS
     try:
-        PARAMETERS = parse_parameters(__doc__, xortool.__version__)
+        PARAMETERS.update(parse_parameters(__doc__, xortool.__version__))
         ciphertext = get_ciphertext()
         update_key_length(ciphertext)
 
@@ -126,7 +125,6 @@ def update_key_length(text):
     """
     Guess length of the key if it's not set. (Updates PARAMETERS)
     """
-    global PARAMETERS
     if PARAMETERS["known_key_length"]:
         return
     PARAMETERS["known_key_length"] = guess_key_length(text)
@@ -328,7 +326,6 @@ def print_keys(keys):
 # -----------------------------------------------------------------------------
 
 def percentage_valid(text):
-    global PARAMETERS
     x = 0.0
     for c in text:
         if c in PARAMETERS["text_charset"]:
@@ -346,8 +343,6 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     creates csv files with keys, percentage of valid
     characters and used most frequent character
     """
-    global PARAMETERS
-    
     cleanup()
     mkdir(DIRNAME)
 
@@ -394,13 +389,11 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
 
     print("Found {} plaintexts with {}%+ valid characters".format(s1, s2))
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
-    return
 
 
 def cleanup():
     if os.path.exists(DIRNAME):
         rmdir(DIRNAME)
-    return
 
 
 if __name__ == "__main__":
