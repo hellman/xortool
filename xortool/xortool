@@ -72,13 +72,14 @@ def main():
     try:
         PARAMETERS.update(parse_parameters(__doc__, xortool.__version__))
         ciphertext = get_ciphertext()
-        update_key_length(ciphertext)
+        if not PARAMETERS["known_key_length"]:
+            PARAMETERS["known_key_length"] = guess_key_length(ciphertext)
 
         if PARAMETERS["brute_chars"]:
             try_chars = range(256)
         elif PARAMETERS["brute_printable"]:
             try_chars = map(ord, string.printable)
-        elif PARAMETERS["most_frequent_char"] != None:
+        elif PARAMETERS["most_frequent_char"] is not None:
             try_chars = [PARAMETERS["most_frequent_char"]]
         else:
             die(C_WARN +
@@ -126,16 +127,6 @@ def get_ciphertext():
 # -----------------------------------------------------------------------------
 # KEYLENGTH GUESSING SECTION
 # -----------------------------------------------------------------------------
-
-def update_key_length(text):
-    """
-    Guess length of the key if it's not set. (Updates PARAMETERS)
-    """
-    if PARAMETERS["known_key_length"]:
-        return
-    PARAMETERS["known_key_length"] = guess_key_length(text)
-    return
-
 
 def guess_key_length(text):
     """
