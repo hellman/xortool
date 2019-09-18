@@ -23,9 +23,6 @@ import string
 import sys
 
 
-HEXES = set("0123456789abcdefABCDEF")
-
-
 def main():
     cycle = True
     newline = True
@@ -62,61 +59,40 @@ def main():
 
 
 def xor(args, cycle=True):
-    maxlen = max(map(len, args))
-    res = [0] * maxlen
-    if cycle:
-        for s in args:
-            slen = len(s)
-            for i in xrange(maxlen):
-                res[i] ^= ord(s[i % slen])
-    else:
-        for s in args:
-            for i in xrange(len(s)):
-                res[i] ^= ord(s[i])
-    return "".join(map(chr, res))
+    # Sort by len DESC
+    args.sort(key=len, reverse=True)
+    res = bytearray(args.pop(0))
+    maxlen = len(res)
 
-
-def from_str(s):
-    res = ""
-    i = 0
-    while True:
-        if i + 4 > len(s):
-            break
-
-        if s[i+1] == "x" and s[i+2] in HEXES and s[i+3] in HEXES:
-            res += chr(int(s[i+2:i+4], 16))
-            i += 4
-        else:
-            res += s[i]
-            i += 1
-    res += s[i:]
+    for s in args:
+        slen = len(s)
+        for i in range(maxlen if cycle else slen):
+            res[i] ^= s[i % slen]
     return res
 
 
-def from_hex(s):
-    res = ""
-    for c in s:
-        if c in HEXES:
-            res += c
-        elif c in string.ascii_letters:
-            raise ValueError("Bad splitters (alphanum)")
-    return res.decode("hex")
+def from_str(s):
+    res = b''
+    for char in s.encode("utf-8").decode("unicode_escape"):
+        res += bytes([ord(char)])
+    return res
 
 
 def from_file(s):
     if s == "-":
-        return sys.stdin.read()
-    return open(s, "rb").read()
+        s = sys.stdin.fileno()
+    with open(s, "rb") as fd:
+        return fd.read()
 
 
 def arg_data(opt, s):
     if opt == "-s":
         return from_str(s)
-    elif opt == "-r":
-        return s
-    elif opt == "-h":
-        return from_hex(s)
-    elif opt == "-f":
+    if opt == "-r":
+        return str.encode(s)
+    if opt == "-h":
+        return bytes.fromhex(s)
+    if opt == "-f":
         return from_file(s)
     return getopt.GetoptError("unknown option -%s" % opt)
 
