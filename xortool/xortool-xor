@@ -47,7 +47,11 @@ def main():
         print(__doc__, file=sys.stderr)
         quit()
 
-    sys.stdout.write(xor(datas, cycle=cycle))
+    xored = xor(datas, cycle=cycle)
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout.buffer.write(xored)
+    else:
+        sys.stdout.write(xored)
     if newline:
         sys.stdout.write("\n")
 
