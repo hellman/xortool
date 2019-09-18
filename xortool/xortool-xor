@@ -8,7 +8,10 @@ options:
     -r  -  raw string
     -h  -  hex-encoded string (non-letterdigit chars are stripped)
     -f  -  read data from file (- for stdin)
-    -n  -  no newline at the end
+
+    --newline -  newline at the end (default)
+    -n / --no-newline -  no newline at the end
+    --cycle - do not pad (default)
     --no-cycle / --nc  -  pad smaller strings with null bytes
 example: xor -s lol -h 414243 -f /etc/passwd
 
@@ -20,7 +23,6 @@ import string
 import sys
 
 
-DATA_OPTS = "s:r:h:f:"
 HEXES = set("0123456789abcdefABCDEF")
 
 
@@ -28,12 +30,18 @@ def main():
     cycle = True
     newline = True
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "n" + DATA_OPTS, ["no-cycle", "nc"])
+        opts, _ = getopt.getopt(
+            sys.argv[1:], "ns:r:h:f:",
+            ["cycle", "no-cycle", "nc", "no-newline", "newline"])
         datas = []
         for c, val in opts:
-            if c in ("--no-cycle", "--nc"):
+            if c == "--cycle":
+                cycle = True
+            elif c in ("--no-cycle", "--nc"):
                 cycle = False
-            elif c == "-n":
+            elif c == "--newline":
+                newline = True
+            elif c in ("-n", "--no-newline"):
                 newline = False
             else:
                 v = arg_data(c, val)
