@@ -69,9 +69,8 @@ class AnalysisError(Exception):
 
 
 def main():
-    global PARAMETERS
     try:
-        PARAMETERS = parse_parameters(__doc__, xortool.__version__)
+        PARAMETERS.update(parse_parameters(__doc__, xortool.__version__))
         ciphertext = get_ciphertext()
         update_key_length(ciphertext)
 
@@ -132,7 +131,6 @@ def update_key_length(text):
     """
     Guess length of the key if it's not set. (Updates PARAMETERS)
     """
-    global PARAMETERS
     if PARAMETERS["known_key_length"]:
         return
     PARAMETERS["known_key_length"] = guess_key_length(text)
@@ -196,7 +194,6 @@ def print_fitnesses(fitnesses):
             print("{C_BEST_KEYLEN}{:4d}{C_RESET}:   {C_BEST_PROB}{:5.1f}%{C_RESET}".format(key_length, pct, **COLORS))
         else:
             print("{C_KEYLEN}{:4d}{C_RESET}:   {C_PROB}{:5.1f}%{C_RESET}".format(key_length, pct, **COLORS))
-    return
 
 
 def calculate_fitness_sum(fitnesses):
@@ -331,7 +328,6 @@ def print_keys(keys):
 # -----------------------------------------------------------------------------
 
 def percentage_valid(text):
-    global PARAMETERS
     x = 0.0
     for c in text:
         if c in PARAMETERS["text_charset"]:
@@ -349,8 +345,6 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     creates csv files with keys, percentage of valid
     characters and used most frequent character
     """
-    global PARAMETERS
-
     cleanup()
     mkdir(DIRNAME)
 
@@ -393,13 +387,11 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
     print(fmt.format(count_valid, round(threshold_valid), **COLORS))
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
-    return
 
 
 def cleanup():
     if os.path.exists(DIRNAME):
         rmdir(DIRNAME)
-    return
 
 
 if __name__ == "__main__":
