@@ -46,7 +46,15 @@ from operator import itemgetter
 import os
 import string
 import xortool
-from xortool.colors import *
+from xortool.colors import (
+    COLORS,
+    C_BEST_KEYLEN,
+    C_BEST_PROB,
+    C_FATAL,
+    C_KEY,
+    C_RESET,
+    C_WARN,
+)
 
 from xortool.routine import *
 from xortool.args import parse_parameters, ArgError
