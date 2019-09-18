@@ -44,10 +44,7 @@ def main():
             elif c in ("-n", "--no-newline"):
                 newline = False
             else:
-                v = arg_data(c, val)
-                if v is None:
-                    raise getopt.GetoptError("unknown option %s" % c)
-                datas.append(v)
+                datas.append(arg_data(c, val))
         if not datas:
             raise getopt.GetoptError("no data given")
     except getopt.GetoptError as e:
@@ -121,7 +118,7 @@ def arg_data(opt, s):
         return from_hex(s)
     elif opt == "-f":
         return from_file(s)
-    return None
+    return getopt.GetoptError("unknown option -%s" % opt)
 
 
 if __name__ == '__main__':
