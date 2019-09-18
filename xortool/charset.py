@@ -29,5 +29,5 @@ def get_charset(charset):
         for c in set(charset):
             _ += CHARSETS[c].encode("ascii")
         return _
-    except KeyError as err:
+    except KeyError:
         raise CharsetError("Bad character set")
