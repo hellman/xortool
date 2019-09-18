@@ -47,7 +47,19 @@ import string
 import sys
 import xortool
 from xortool.charset import CharsetError
-from xortool.colors import *
+from xortool.colors import (
+    COLORS,
+    C_BEST_KEYLEN,
+    C_BEST_PROB,
+    C_COUNT,
+    C_DIV,
+    C_FATAL,
+    C_KEY,
+    C_KEYLEN,
+    C_PROB,
+    C_RESET,
+    C_WARN,
+)
 
 from xortool.routine import *
 from xortool.args import parse_parameters, ArgError
