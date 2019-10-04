@@ -1,7 +1,9 @@
-#!/usr/bin/env python
-#-*- coding:utf-8 -*-
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
 
 import string
+
+import numpy as np
 
 
 class CharsetError(Exception):
@@ -23,7 +25,7 @@ PREDEFINED_CHARSETS = {
 }
 
 
-def get_charset(charset):
+def _get_charset_string(charset):
     charset = charset or "printable"
     if charset in PREDEFINED_CHARSETS.keys():
         return PREDEFINED_CHARSETS[charset]
@@ -32,5 +34,10 @@ def get_charset(charset):
         for c in set(charset):
             _ += CHARSETS[c]
         return _
-    except KeyError as err:
-        raise CharsetError("Bad character set")
+    except KeyError:
+        raise CharsetError("Bad character set: ", charset)
+
+
+def get_charset(charset):
+    charset_string = _get_charset_string(charset)
+    return np.array(list(bytes(charset_string, 'utf8')), dtype=np.uint8)

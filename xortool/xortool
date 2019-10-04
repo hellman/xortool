@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #-*- coding:utf-8 -*-
 """
 xortool
@@ -41,56 +41,86 @@ Examples:
   xortool -b -f -l 23 -t base64 message.enc
 """
 
+from collections import Counter
+from itertools import product
+import math
 from operator import itemgetter
-
 import os
 import string
-import xortool
-from xortool.colors import *
+import sys
 
-from xortool.routine import *
-from xortool.args import parse_parameters, ArgError
+import numpy as np
+
+import xortool
+from xortool.args import (
+    parse_parameters,
+    ArgError,
+)
+from xortool.charset import CharsetError
+from xortool.colors import (
+    COLORS,
+    C_BEST_KEYLEN,
+    C_BEST_PROB,
+    C_FATAL,
+    C_KEY,
+    C_RESET,
+    C_WARN,
+)
+from xortool.routine import (
+    die,
+    mkdir,
+    rmdir,
+    MkdirError,
+)
+
 
 DIRNAME = 'xortool_out'  # here plaintexts will be placed
 PARAMETERS = dict()
-
+BRANCH_FACTOR = 1.1
+BRANCH_MAX = 1024*1024
 
 class AnalysisError(Exception):
     pass
 
 
 def main():
-    global PARAMETERS
     try:
-        PARAMETERS = parse_parameters(__doc__, xortool.__version__)
+        PARAMETERS.update(parse_parameters(__doc__, xortool.__version__))
         ciphertext = get_ciphertext()
-        update_key_length(ciphertext)
+        if not PARAMETERS["known_key_length"]:
+            PARAMETERS["known_key_length"] = guess_key_length(ciphertext)
 
         if PARAMETERS["brute_chars"]:
-            try_chars = range(256)
+            try_chars = bytes(range(256))
         elif PARAMETERS["brute_printable"]:
-            try_chars = map(ord, string.printable)
-        elif PARAMETERS["most_frequent_char"] != None:
-            try_chars = [PARAMETERS["most_frequent_char"]]
+            try_chars = bytes(map(ord, string.printable))
+        elif PARAMETERS["most_frequent_char"] is not None:
+            try_chars = PARAMETERS["most_frequent_char"]
         else:
             die(C_WARN +
                 "Most possible char is needed to guess the key!" +
                 C_RESET)
 
-        (probable_keys,
-         key_char_used) = guess_probable_keys_for_chars(ciphertext, try_chars)
-
-        print_keys(probable_keys)
-        produce_plaintexts(ciphertext, probable_keys, key_char_used)
+        key_printer = setup_print_keys()
+        produce_plaintext, end = setup_produce_plaintexts(ciphertext, 5)
+        for char, key in guess_probable_keys_for_chars(ciphertext, try_chars):
+            key_printer(key)
+            produce_plaintext(key, char)
+        key_printer(None)
+        end()
 
     except IOError as err:
         print(C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET)
-    except ArgError as err:
-        print(C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET)
-    except MkdirError as err:
-        print(C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET)
     except AnalysisError as err:
         print(C_FATAL + "[ERROR] Analysis error:\n\t", err, C_RESET)
+    except ArgError as err:
+        print(C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET)
+    except CharsetError as err:
+        print(C_FATAL + "[ERROR] Bad charset:\n\t", err, C_RESET)
+    except MkdirError as err:
+        print(C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET)
+    except UnicodeDecodeError as err:
+        print(C_FATAL + "[ERROR] Input is not hex:\n\t", err, C_RESET)
     else:
         return
     cleanup()
@@ -101,33 +131,36 @@ def main():
 # -----------------------------------------------------------------------------
 
 def get_ciphertext():
-    """
-    Load ciphertext from a file or stdin and hex-decode if needed
-    """
-    ciphertext = load_file(PARAMETERS["filename"])
-    if PARAMETERS["input_is_hex"]:
-        ciphertext = decode_from_hex(ciphertext)
-    return ciphertext
+    """Load ciphertext from a file or stdin and hex-decode if needed"""
+    dtype = np.uint8
+    filename = PARAMETERS["filename"]
+    read_as_string = PARAMETERS["input_is_hex"]
+    if filename == "-" or read_as_string:
+        if filename == "-":
+            filename = sys.stdin.fileno()
+        if read_as_string:
+            ciphertext = b''
+            with open(filename, "r") as fd:
+                for line in fd:
+                    ciphertext += bytes.fromhex(line)
+            return np.array(list(ciphertext), dtype=dtype)
+        with open(filename, "rb") as fd:
+            return np.array(list(fd.read()), dtype=dtype)
+    return np.fromfile(filename, dtype=dtype)
 
 
 # -----------------------------------------------------------------------------
 # KEYLENGTH GUESSING SECTION
 # -----------------------------------------------------------------------------
 
-def update_key_length(text):
-    """
-    Guess length of the key if it's not set. (Updates PARAMETERS)
-    """
-    global PARAMETERS
-    if PARAMETERS["known_key_length"]:
-        return
-    PARAMETERS["known_key_length"] = guess_key_length(text)
-    return
+def count_max(a):
+    return np.max(np.bincount(a))
 
 
 def guess_key_length(text):
     """
-    Try key lengths from 1 to max_key_length and print local maximums.
+    Try key lengths from 1 to max_key_length and print local maximums
+
     Set key_length to the most possible if it's not set by user.
     """
     fitnesses = calculate_fitnesses(text)
@@ -136,28 +169,24 @@ def guess_key_length(text):
 
     print_fitnesses(fitnesses)
     guess_and_print_divisors(fitnesses)
-    return get_max_fitnessed_key_length(fitnesses)
+    return max(fitnesses, key=lambda item: item[1])[0]
 
 
 def calculate_fitnesses(text):
-    """
-    Calc. fitnesses for each keylen
-    """
+    """Calculate fitnesses for each keylen"""
     prev = 0
     pprev = 0
     fitnesses = []
     for key_length in range(1, PARAMETERS["max_key_length"] + 1):
-        fitness = count_equals(text, key_length)
+        fitness = count_equal_char_sum_by_offset(text, key_length)
 
-        # smaller key-length with nearly the same fitness is preferable
-        fitness = (float(fitness) /
-                   (PARAMETERS["max_key_length"] + key_length ** 1.5))
+        # prefer smaller key-length with nearly the same fitness
+        fitness /= PARAMETERS["max_key_length"] + key_length ** 1.5
 
         if pprev < prev and prev > fitness:  # local maximum
             fitnesses += [(key_length - 1, prev)]
 
-        pprev = prev
-        prev = fitness
+        pprev, prev = prev, fitness
 
     if pprev < prev:
         fitnesses += [(key_length - 1, prev)]
@@ -174,145 +203,126 @@ def print_fitnesses(fitnesses):
     best_fitness = top10[0][1]
     top10.sort(key=itemgetter(0))
 
-    fitness_sum = calculate_fitness_sum(top10)
+    fitness_sum = sum(f[1] for f in top10)
+
+    fmt = "{C_KEYLEN}{:" + str(len(str(max(i[0] for i in top10)))) + \
+            "}{C_RESET}: {C_PROB}{:5.1f}%{C_RESET}"
+
+    best_colors = COLORS.copy()
+    best_colors.update({
+        'C_KEYLEN': C_BEST_KEYLEN,
+        'C_PROB': C_BEST_PROB,
+    })
 
     for key_length, fitness in top10:
-        s1 = str(key_length).rjust(4, " ")
-        s2 = str(round(100 * fitness * 1.0 / fitness_sum, 1)) + "%"
-        if fitness == best_fitness:
-            print((C_BEST_KEYLEN + s1 + C_RESET + ":   "
-                   + C_BEST_PROB + s2 + C_RESET))
-        else:
-            print((C_KEYLEN + s1 + C_RESET + ":   "
-                   + C_PROB + s2 + C_RESET))
-    return
+        colors = best_colors if fitness == best_fitness else COLORS
+        print(fmt.format(key_length, round(100 * fitness * 1.0 / fitness_sum, 1), **colors))
 
 
-def calculate_fitness_sum(fitnesses):
-    return sum([f[1] for f in fitnesses])
+def count_equal_char_sum_by_offset(text, key_length):
+    # We are only interested in extra hits so -1
+    if key_length >= text.shape[0]:
+        return 1 - 1
 
+    extra_length = text.shape[0] % key_length
+    full_key_lengths = text if extra_length == 0 else text[0:-extra_length]
+    by_key = np.reshape(full_key_lengths, (-1, key_length)).T
 
-def count_equals(text, key_length):
-    """
-    count equal chars count for each offset and sum them
-    """
     equals_count = 0
-    if key_length >= len(text):
-        return 0
 
-    for offset in range(key_length):
-        chars_count = chars_count_at_offset(text, key_length, offset)
-        equals_count += max(chars_count.values()) - 1  # why -1? don't know
+    for offset in by_key:
+        equals_count += count_max(offset) - 1
+
     return equals_count
 
 
 def guess_and_print_divisors(fitnesses):
-    """
-    Prints common divisors and returns the most common divisor
-    """
-    divisors_counts = [0] * (PARAMETERS["max_key_length"] + 1)
-    for key_length, fitness in fitnesses:
-        for number in range(3, key_length + 1):
-            if key_length % number == 0:
-                divisors_counts[number] += 1
-    max_divisors = max(divisors_counts)
+    """Prints common divisors and returns the most common divisor"""
+    divisors_counts = Counter(number
+                              for key_length, _ in fitnesses
+                              for number in range(3, key_length + 1)
+                              if key_length % number == 0)
+    max_divisors = list(divisors_counts.most_common(1))[0][1]
 
     limit = 3
     ret = 2
-    for number, divisors_count in enumerate(divisors_counts):
-        if divisors_count == max_divisors:
-            print("Key-length can be " + C_DIV + str(number) + "*n" + C_RESET)
-            ret = number
-            limit -= 1
-            if limit == 0:
-                return ret
+    for number, divisors_count in divisors_counts.most_common():
+        if divisors_count < max_divisors or limit == 0:
+            break
+        print("Key-length can be {C_DIV}{}*n{C_RESET}".format(number, **COLORS))
+        ret = number
+        limit -= 1
     return ret
-
-
-def get_max_fitnessed_key_length(fitnesses):
-    max_fitness = 0
-    max_fitnessed_key_length = 0
-    for key_length, fitness in fitnesses:
-        if fitness > max_fitness:
-            max_fitness = fitness
-            max_fitnessed_key_length = key_length
-    return max_fitnessed_key_length
-
-
-def chars_count_at_offset(text, key_length, offset):
-    chars_count = dict()
-    for pos in range(offset, len(text), key_length):
-        c = text[pos]
-        if c in chars_count:
-            chars_count[c] += 1
-        else:
-            chars_count[c] = 1
-    return chars_count
-
 
 # -----------------------------------------------------------------------------
 # KEYS GUESSING SECTION
 # -----------------------------------------------------------------------------
 
 def guess_probable_keys_for_chars(text, try_chars):
-    """
-    Guess keys for list of characters.
-    """
-    probable_keys = []
-    key_char_used = {}
+    """Generate all possible keys for key length and the most possible char"""
+    def highest_count_chars(a, remove_zero):
+        nonlocal possibility_budget
+        y = np.bincount(a)
+        if remove_zero:
+            y[0] -= 0
+        ii = np.nonzero(y)[0]
+        c = y[ii]
+        has_max = (ii[c == np.max(c)]).astype(text_dtype)
+        if len(has_max) > 1 and possibility_budget > 0:
+            possibility_budget -= 1
+            return np.random.choice(has_max, 2, replace=False)
+        return has_max
 
-    for c in try_chars:
-        keys = guess_keys(text, c)
-        for key in keys:
-            key_char_used[key] = c
-            if key not in probable_keys:
-                probable_keys.append(key)
+    def possible_chars(text_by_key, extra_zero_index):
+        chars = []
+        for i, offset in enumerate(text_by_key):
+            remove_zero = bool(i >= extra_zero_index)
+            chars.append(highest_count_chars(offset, remove_zero))
+        return chars
 
-    return probable_keys, key_char_used
+    key_len = PARAMETERS["known_key_length"]
+    text_len = text.shape[0]
+    text_dtype = text.dtype
 
+    extra_zero_index = text_len % key_len
+    extra_elements = (key_len - extra_zero_index) % key_len
+    if extra_elements > 0:
+        full_text = np.zeros(text_len + extra_elements, dtype=text_dtype)
+        full_text[0:text_len] = text
+    else:
+        full_text = text
+    text_by_key = np.reshape(full_text, (-1, key_len)).T
 
-def guess_keys(text, most_char):
-    """
-    Generate all possible keys for key length
-    and the most possible char
-    """
-    key_length = PARAMETERS["known_key_length"]
-    key_possible_bytes = [[] for _ in range(key_length)]
+    possibilities = text_by_key.shape[0] * len(try_chars)
+    possibility_budget = min(int(possibilities * BRANCH_FACTOR), BRANCH_MAX)
+    possibility_budget = max(possibility_budget - possibilities, 0)
+    possibility_budget = int(possibility_budget / len(try_chars))
 
-    for offset in range(key_length):  # each byte of key<
-        chars_count = chars_count_at_offset(text, key_length, offset)
-        max_count = max(chars_count.values())
-        for char in chars_count:
-            if chars_count[char] >= max_count:
-                key_possible_bytes[offset].append(chr(ord(char) ^ most_char))
-
-    return all_keys(key_possible_bytes)
-
-
-def all_keys(key_possible_bytes, key_part="", offset=0):
-    """
-    Produce all combinations of possible key chars
-    """
-    keys = []
-    if offset >= len(key_possible_bytes):
-        return [key_part]
-    for c in key_possible_bytes[offset]:
-        keys += all_keys(key_possible_bytes, key_part + c, offset + 1)
-    return keys
+    for key_parts in product(*possible_chars(text_by_key, extra_zero_index)):
+        key_arr = np.array(key_parts, dtype=text_dtype)
+        for char in try_chars:
+            yield char, bytes(key_arr ^ char)
 
 
-def print_keys(keys):
-    if not keys:
-        print("No keys guessed!")
-        return
-
-    s1 = C_COUNT + str(len(keys)) + C_RESET
-    s2 = C_COUNT + str(len(keys[0])) + C_RESET
-    print("{} possible key(s) of length {}:".format(s1, s2))
-    for key in keys[:5]:
-        print(C_KEY + repr(key)[1:-1] + C_RESET)
-    if len(keys) > 10:
-        print("...")
+def setup_print_keys():
+    printed_count = 0
+    max_count = 5
+    def key_printer(key):
+        nonlocal printed_count, max_count
+        if printed_count == max_count:
+            return
+        if key is None:
+            if printed_count == 0:
+                print("No keys guessed!")
+            return
+        if printed_count == 0:
+            print("Got {C_COUNT}possible{C_RESET} key(s):".format(
+                **COLORS))
+        print(C_KEY + repr(key) + C_RESET)
+        printed_count += 1
+        if printed_count == max_count:
+            print("...")
+    return key_printer
 
 
 # -----------------------------------------------------------------------------
@@ -320,26 +330,30 @@ def print_keys(keys):
 # -----------------------------------------------------------------------------
 
 def percentage_valid(text):
-    global PARAMETERS
-    x = 0.0
-    for c in text:
-        if c in PARAMETERS["text_charset"]:
-            x += 1
-    return x / len(text)
+    counts = np.zeros(256, dtype=int)
+    uniq = np.bincount(text)
+    counts[0:uniq.shape[0]] = uniq
+    return np.sum(counts[PARAMETERS["text_charset"]]) / text.shape[0]
 
 
 # -----------------------------------------------------------------------------
 # PRODUCE OUTPUT
 # -----------------------------------------------------------------------------
 
-def produce_plaintexts(ciphertext, keys, key_char_used):
+def dexor(text, key):
+    n_key = np.array(list(key), dtype=np.uint8)
+    key_repeats = math.ceil(text.shape[0] / n_key.shape[0])
+    key_xor = np.tile(n_key, key_repeats)[0:text.shape[0]]
+    return text ^ key_xor
+
+
+def setup_produce_plaintexts(ciphertext, max_keylen):
     """
-    Produce plaintext variant for each possible key,
-    creates csv files with keys, percentage of valid
-    characters and used most frequent character
+    Produce plaintext variant for each possible key
+
+    Creates csv files with keys, percentage of valid
+    characters and used most frequent character.
     """
-    global PARAMETERS
-    
     cleanup()
     mkdir(DIRNAME)
 
@@ -349,50 +363,57 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     fn_key_mapping = "filename-key.csv"
     fn_perc_mapping = "filename-char_used-perc_valid.csv"
 
-    key_mapping = open(os.path.join(DIRNAME,  fn_key_mapping), "w")
-    perc_mapping = open(os.path.join(DIRNAME, fn_perc_mapping), "w")
-
-    key_mapping.write("file_name;key_repr\n")
-    perc_mapping.write("file_name;char_used;perc_valid\n")
+    key_index_fmt = "{:0" + str(max_keylen) + "}.out"
 
     threshold_valid = 95
     count_valid = 0
 
-    for index, key in enumerate(keys):
-        key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
-        key_repr = repr(key)[1:-1].replace("/", "\\x2f")
-        if not is_linux():
-            key_repr = alphanum(key)
-        file_name = os.path.join(DIRNAME, key_index + ".out")
+    key_mapping = open(os.path.join(DIRNAME, fn_key_mapping), "w", buffering=1)
+    perc_mapping = open(os.path.join(DIRNAME, fn_perc_mapping), "w", buffering=1)
+
+    key_mapping.write("file_name;key_repr\n")
+    perc_mapping.write("file_name;char_used;perc_valid\n")
+
+    index = 0
+
+    def produce_plaintext(key, char):
+        nonlocal key_mapping, perc_mapping
+        nonlocal key_index_fmt, index
+        nonlocal threshold_valid, count_valid
+        file_name = os.path.join(DIRNAME, key_index_fmt.format(index))
+        index += 1
 
         dexored = dexor(ciphertext, key)
-        perc = round(100 * percentage_valid(dexored))
+
+        perc = percentage_valid(dexored) * 100
         if perc > threshold_valid:
             count_valid += 1
-        key_mapping.write("{};{}\n".format(file_name, key_repr))
-        perc_mapping.write("{};{};{}\n".format(file_name,
-                                               repr(key_char_used[key]),
-                                               perc))
-        if not PARAMETERS["filter_output"] or \
-            (PARAMETERS["filter_output"] and perc > threshold_valid):
-            f = open(file_name, "wb")
-            f.write(dexored)
-            f.close()
-    key_mapping.close()
-    perc_mapping.close()
 
-    s1 = C_COUNT + str(count_valid) + C_RESET
-    s2 = C_COUNT + str(round(threshold_valid)) + C_RESET
+        key_mapping.write("{};{}\n".format(file_name, repr(key)))
+        perc_mapping.write("{};{};{}\n".format(
+            file_name, repr(chr(char)), int(perc)))
 
-    print("Found {} plaintexts with {}%+ valid characters".format(s1, s2))
-    print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
-    return
+        if not PARAMETERS["filter_output"] or perc > threshold_valid:
+            dexored.tofile(file_name)
+
+    def end():
+        nonlocal fn_key_mapping, fn_perc_mapping
+        nonlocal key_mapping, perc_mapping
+        nonlocal threshold_valid, count_valid
+        key_mapping.close()
+        perc_mapping.close()
+        print("Found {C_COUNT}{}{C_RESET} plaintexts".format(count_valid, **COLORS))
+        if PARAMETERS["filter_output"]:
+            print("With {C_COUNT}{}%+{C_RESET} valid characters".format(
+                int(threshold_valid), **COLORS))
+        print("See files {} {}".format(fn_key_mapping, fn_perc_mapping))
+
+    return produce_plaintext, end
 
 
 def cleanup():
     if os.path.exists(DIRNAME):
         rmdir(DIRNAME)
-    return
 
 
 if __name__ == "__main__":

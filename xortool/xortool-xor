@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #-*- coding:utf-8 -*-
 
 """
@@ -8,39 +8,43 @@ options:
     -r  -  raw string
     -h  -  hex-encoded string (non-letterdigit chars are stripped)
     -f  -  read data from file (- for stdin)
-    -n  -  no newline at the end
+
+    --newline -  newline at the end (default)
+    -n / --no-newline -  no newline at the end
+    --cycle - do not pad (default)
     --no-cycle / --nc  -  pad smaller strings with null bytes
 example: xor -s lol -h 414243 -f /etc/passwd
 
 author: hellman ( hellman1908@gmail.com )
 """
 
-from __future__ import print_function
-import sys
-import string
 import getopt
+import math
+import string
+import sys
 
-
-DATA_OPTS = "s:r:h:f:"
-HEXES = set("0123456789abcdefABCDEF")
+import numpy as np
 
 
 def main():
-    nocycle = False
-    nonewline = False
+    cycle = True
+    newline = True
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "n" + DATA_OPTS, ["no-cycle", "nc"])
+        opts, _ = getopt.getopt(
+            sys.argv[1:], "ns:r:h:f:",
+            ["cycle", "no-cycle", "nc", "no-newline", "newline"])
         datas = []
         for c, val in opts:
-            if c in ("--no-cycle", "--nc"):
-                nocycle = True
-            elif c == "-n":
-                nonewline = True
+            if c == "--cycle":
+                cycle = True
+            elif c in ("--no-cycle", "--nc"):
+                cycle = False
+            elif c == "--newline":
+                newline = True
+            elif c in ("-n", "--no-newline"):
+                newline = False
             else:
-                v = arg_data(c, val)
-                if v is None:
-                    raise getopt.GetoptError("unknown option %s" % c)
-                datas.append(v)
+                datas.append(arg_data(c, val))
         if not datas:
             raise getopt.GetoptError("no data given")
     except getopt.GetoptError as e:
@@ -48,69 +52,58 @@ def main():
         print(__doc__, file=sys.stderr)
         quit()
 
-    sys.stdout.write(xor(datas, nocycle=nocycle))
-    if not nonewline:
+    xored = xor(datas, cycle=cycle)
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout.buffer.write(xored)
+    else:
+        sys.stdout.write(xored)
+    if newline:
         sys.stdout.write("\n")
 
 
-def xor(args, nocycle=False):
-    maxlen = max(map(len, args))
-    res = [0] * maxlen
-    if nocycle:
-        for s in args:
-            for i in xrange(len(s)):
-                res[i] ^= ord(s[i])
-    else:
-        for s in args:
-            slen = len(s)
-            for i in xrange(maxlen):
-                res[i] ^= ord(s[i % slen])
-    return "".join(map(chr, res))
+def xor(args, cycle=True):
+    # Sort by len DESC
+    args.sort(key=len, reverse=True)
+    res = np.array(list(args.pop(0)), dtype=np.uint8)
+    maxlen = res.shape[0]
+
+    for s in args:
+        sa = np.array(list(s), dtype=np.uint8)
+        slen = sa.shape[0]
+        if cycle:
+            repeats = math.ceil(maxlen / slen)
+            sa_xor = np.tile(sa, repeats)[0:maxlen]
+            res = res ^ sa_xor
+        else:
+            res[0:slen] = res[0:slen] ^ sa
+
+    return bytes(res)
 
 
 def from_str(s):
-    res = ""
-    i = 0
-    while True:
-        if i + 4 > len(s):
-            break
-
-        if s[i+1] == "x" and s[i+2] in HEXES and s[i+3] in HEXES:
-            res += chr(int(s[i+2:i+4], 16))
-            i += 4
-        else:
-            res += s[i]
-            i += 1
-    res += s[i:]
+    res = b''
+    for char in s.encode("utf-8").decode("unicode_escape"):
+        res += bytes([ord(char)])
     return res
-
-
-def from_hex(s):
-    res = ""
-    for c in s:
-        if c in HEXES:
-            res += c
-        elif c in string.ascii_letters:
-            raise ValueError("Bad splitters (alphanum)")
-    return res.decode("hex")
 
 
 def from_file(s):
     if s == "-":
-        return sys.stdin.read()
-    return open(s, "rb").read()
+        s = sys.stdin.fileno()
+    with open(s, "rb") as fd:
+        return fd.read()
 
 
 def arg_data(opt, s):
     if opt == "-s":
         return from_str(s)
-    elif opt == "-r":
-        return s
-    elif opt == "-h":
-        return from_hex(s)
-    elif opt == "-f":
+    if opt == "-r":
+        return str.encode(s)
+    if opt == "-h":
+        return bytes.fromhex(s)
+    if opt == "-f":
         return from_file(s)
-    return None
+    return getopt.GetoptError("unknown option -%s" % opt)
 
 
 if __name__ == '__main__':
