@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #-*- coding:utf-8 -*-
 
 """
@@ -48,13 +48,13 @@ def main():
 
     sys.stdout.buffer.write(xor(datas, nocycle=nocycle))
     if not nonewline:
-        sys.stdout.write("\n")
+        sys.stdout.buffer.write(b"\n")
 
 
 def xor(args, nocycle=False):
     # Sort by len DESC
     args.sort(key=len, reverse=True)
-    res = bytearray(args.pop(0))
+    res = list(args.pop(0))
     maxlen = len(res)
 
     for s in args:
@@ -62,28 +62,28 @@ def xor(args, nocycle=False):
         srange = range(slen if nocycle else maxlen)
         for i in srange:
             res[i] ^= s[i % slen]
-    return res
+    return bytes(res)
 
 
 def from_str(s):
-    res = ""
+    res = []
     i = 0
     while True:
         if i + 4 > len(s):
             break
 
-        if s[i+1] == "x" and s[i+2] in HEXES and s[i+3] in HEXES:
-            res += chr(int(s[i+2:i+4], 16))
+        if s[i] == "\\" and s[i+1] == "x" and s[i+2] in HEXES and s[i+3] in HEXES:
+            res.append(int(s[i+2:i+4], 16))
             i += 4
         else:
-            res += s[i]
+            res.append(ord(s[i]))
             i += 1
-    res += s[i:]
-    return str.encode(res)
+    res += s[i:].encode("ascii")
+    return bytes(res)
 
 def from_file(s):
     if s == "-":
-        return sys.stdin.read()
+        return sys.stdin.buffer.read()
     return open(s, "rb").read()
 
 
