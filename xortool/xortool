@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#-*- coding:utf-8 -*-
 """
 xortool
   A tool to do some xor analysis:

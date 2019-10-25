@@ -1,6 +1,3 @@
-#!/usr/bin/env python2
-#-*- coding:utf-8 -*-
-
 from docopt import docopt
 
 from xortool.routine import parse_char
