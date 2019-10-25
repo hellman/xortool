@@ -6,6 +6,8 @@ A tool to do some xor analysis:
   - guess the key length (based on count of equal chars)
   - guess the key (base on knowledge of most frequent char)
 
+**Notice:** xortool is moving to Python 3, the PyPI package will be upgraded soon. The old Python 2 version is accessible at the `py2` branch.
+
 Usage
 ---------------------
 
@@ -137,7 +139,7 @@ Example 2
 We are given a message in encoded in Base64 and XORed with an unknown key.
 
 ```bash
-# xortool message.enc 
+# xortool message.enc
 The most probable key lengths:
    2:   12.3%
    4:   13.8%
@@ -161,7 +163,7 @@ $ xortool message.enc -b -f -l 23 -t base64
 \x01=\x121#"0\x17\x13\t\x7f ,&/\x12s\x114u\x170#
 \x00<\x130"#1\x16\x12\x08~!-\'.\x13r\x105t\x161"
 \x03?\x103! 2\x15\x11\x0b}".$-\x10q\x136w\x152!
-\x02>\x112 !3\x14\x10\n|#/%,\x11p\x127v\x143 
+\x02>\x112 !3\x14\x10\n|#/%,\x11p\x127v\x143
 \x059\x165\'&4\x13\x17\r{$("+\x16w\x150q\x134\'
 ...
 Found 1 plaintexts with 95.0%+ valid characters
