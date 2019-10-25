@@ -7,13 +7,13 @@
 # $ ./test/test.sh
 # to test the globally installed xortool
 
-[ "dist" == "$1" ] && export PATH="./xortool/:$PATH"
+[ "dist" = "$1" ] && export PATH="./xortool/:$PATH"
 
 set -epux
 
 binary_xored_ok() {
     [ -d xortool_out ]
-    grep -q "b'secret_key'" xortool_out/filename-key.csv 
+    grep -q "b'secret_key'" xortool_out/filename-key.csv
     grep -c 'Free Software Foundation, Inc' xortool_out/*.out | \
         cut -d: -f2- | uniq -c | egrep -v ' 0 ' | egrep -q ' 1 1$'
 }
@@ -29,13 +29,15 @@ binary_xored() {
     xortool -x -l 10 -c 00
     binary_xored_ok
 
+    rm -rf xortool_out
     ! xortool -x "$f"
     [ ! -d xortool_out ]
 
+    rm -rf xortool_out
     ! xortool --hex "$f"
     [ ! -d xortool_out ]
 
-    xortool -c 00 "$f" 
+    xortool -c 00 "$f"
     binary_xored_ok
 
     xortool --char=00 "$f"
@@ -68,7 +70,7 @@ binary_xored() {
 
 ls_xored_ok() {
     [ -d xortool_out ]
-    grep -q "b'really long s3cr3t k3y... PADDING'" xortool_out/filename-key.csv 
+    grep -q "b'really long s3cr3t k3y... PADDING'" xortool_out/filename-key.csv
     grep -q 'Free Software Foundation, Inc' xortool_out/*0.out
 }
 
@@ -83,13 +85,15 @@ ls_xored() {
     xortool -x -l 33 -c 00
     ls_xored_ok
 
+    rm -rf xortool_out
     ! xortool -x "$f"
     [ ! -d xortool_out ]
 
+    rm -rf xortool_out
     ! xortool --hex "$f"
     [ ! -d xortool_out ]
 
-    xortool -c 00 "$f" 
+    xortool -c 00 "$f"
     ls_xored_ok
     xortool --char=00 "$f"
     ls_xored_ok
@@ -121,7 +125,7 @@ ls_xored() {
 
 text_xored_ok() {
     [ -d xortool_out ]
-    grep -q "b'"'\\xde\\xad\\xbe\\xef'"'" xortool_out/filename-key.csv 
+    grep -q "b'"'\\xde\\xad\\xbe\\xef'"'" xortool_out/filename-key.csv
     grep -q 'List of known bugs' xortool_out/*.out
 }
 
@@ -161,7 +165,7 @@ text_xored() {
 
 tool_xored_ok() {
     [ -d xortool_out ]
-    grep -q "b'"'an0ther s3cret \\xdd key'"'" xortool_out/filename-key.csv 
+    grep -q "b'"'an0ther s3cret \\xdd key'"'" xortool_out/filename-key.csv
     grep -q '# Author: hellman ( hellman1908@gmail.com )' xortool_out/*.out
 }
 
