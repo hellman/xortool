@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# Usage:
+#
+# $ ./test/test.sh dist
+# to test the (unbuilt) xortool from this dir
+#
+# $ ./test/test.sh
+# to test the globally installed xortool
+
+[ "dist" == "$1" ] && export PATH="./xortool/:$PATH"
 
 set -epux
 
