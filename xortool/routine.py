@@ -12,7 +12,7 @@ class MkdirError(Exception):
 
 def load_file(filename):
     if filename == "-":
-        return sys.stdin.read()
+        return sys.stdin.buffer.read()
     fd = open(filename, "rb")
     contents = fd.read()
     fd.close()
@@ -53,10 +53,10 @@ def rmdir(dirname):
     os.rmdir(dirname)
     return
 
-
 def decode_from_hex(text):
-    only_hex_digits = "".join([c for c in text if c in string.hexdigits])
-    return only_hex_digits.decode("hex")
+    text = text.decode("ascii")
+    only_hex_digits = "".join(c for c in text if c in string.hexdigits)
+    return bytes.fromhex(only_hex_digits)
 
 
 def parse_char(ch):
@@ -69,15 +69,12 @@ def parse_char(ch):
         ch = ch[2:]
     if not ch:
         raise ValueError("Empty char")
-    return ord(chr(int(ch, 16)))
+    return int(ch, 16)
 
 
 def dexor(text, key):
-    ret = list(text)
     mod = len(key)
-    for index, char in enumerate(ret):
-        ret[index] = chr(char ^ ord(key[index % mod]))
-    return "".join(ret)
+    return bytes(key[index % mod] ^ char for index, char in enumerate(text))
 
 
 def die(exitMessage, exitCode=1):
@@ -94,5 +91,5 @@ def alphanum(s):
     for index, char in enumerate(lst):
         if char in (string.ascii_letters + string.digits):
             continue
-        lst[index] = char.encode("hex")
+        lst[index] = char.hex()
     return "".join(lst)

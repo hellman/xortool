@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #-*- coding:utf-8 -*-
 """
 xortool
@@ -284,20 +284,20 @@ def guess_keys(text, most_char):
         max_count = max(chars_count.values())
         for char in chars_count:
             if chars_count[char] >= max_count:
-                key_possible_bytes[offset].append(chr(char ^ most_char))
+                key_possible_bytes[offset].append(char ^ most_char)
 
     return all_keys(key_possible_bytes)
 
 
-def all_keys(key_possible_bytes, key_part="", offset=0):
+def all_keys(key_possible_bytes, key_part=(), offset=0):
     """
     Produce all combinations of possible key chars
     """
     keys = []
     if offset >= len(key_possible_bytes):
-        return [key_part]
+        return [bytes(key_part)]
     for c in key_possible_bytes[offset]:
-        keys += all_keys(key_possible_bytes, key_part + c, offset + 1)
+        keys += all_keys(key_possible_bytes, key_part + (c,), offset + 1)
     return keys
 
 
@@ -360,9 +360,7 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
 
     for index, key in enumerate(keys):
         key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
-        key_repr = repr(key)[1:-1].replace("/", "\\x2f")
-        if not is_linux():
-            key_repr = alphanum(key)
+        key_repr = repr(key)
         file_name = os.path.join(DIRNAME, key_index + ".out")
 
         dexored = dexor(ciphertext, key)
@@ -376,7 +374,7 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
         if not PARAMETERS["filter_output"] or \
             (PARAMETERS["filter_output"] and perc > threshold_valid):
             f = open(file_name, "wb")
-            f.write(bytes(dexored, 'utf8'))
+            f.write(dexored)
             f.close()
     key_mapping.close()
     perc_mapping.close()

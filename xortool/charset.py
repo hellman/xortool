@@ -25,12 +25,12 @@ PREDEFINED_CHARSETS = {
 
 def get_charset(charset):
     charset = charset or "printable"
-    if charset in PREDEFINED_CHARSETS.keys():
-        return PREDEFINED_CHARSETS[charset]
+    if charset in PREDEFINED_CHARSETS:
+        return PREDEFINED_CHARSETS[charset].encode("ascii")
     try:
-        _ = ""
+        _ = b""
         for c in set(charset):
-            _ += CHARSETS[c]
+            _ += CHARSETS[c].encode("ascii")
         return _
     except KeyError as err:
         raise CharsetError("Bad character set")
