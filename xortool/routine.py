@@ -9,7 +9,7 @@ class MkdirError(Exception):
 
 def load_file(filename):
     if filename == "-":
-        return sys.stdin.buffer.read()
+        filename = sys.stdin.fileno()
     with open(filename, "rb") as fd:
         return fd.read()
 

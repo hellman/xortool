@@ -81,9 +81,10 @@ def from_str(s):
     res += s[i:].encode("ascii")
     return bytes(res)
 
+
 def from_file(s):
     if s == "-":
-        return sys.stdin.buffer.read()
+        s = sys.stdin.fileno()
     return open(s, "rb").read()
 
 
