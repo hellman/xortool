@@ -18,8 +18,9 @@ fi
 binary_xored_ok() {
     [ -d xortool_out ]
     grep -q "b'secret_key'" xortool_out/filename-key.csv
-    grep -c 'Free Software Foundation, Inc' xortool_out/*.out | \
-        cut -d: -f2- | uniq -c | egrep -v ' 0 ' | egrep -q ' 1 1$'
+    grep -rc 'Free Software Foundation, Inc' xortool_out | \
+        sed '/\.csv:/d;s/^[^:]*://;/^0$/d' | uniq -c | \
+        egrep -q ' 1 1$'
 }
 
 binary_xored() {
@@ -75,7 +76,7 @@ binary_xored() {
 ls_xored_ok() {
     [ -d xortool_out ]
     grep -q "b'really long s3cr3t k3y... PADDING'" xortool_out/filename-key.csv
-    grep -q 'Free Software Foundation, Inc' xortool_out/*0.out
+    grep -qr 'Free Software Foundation, Inc' xortool_out
 }
 
 ls_xored() {
@@ -130,7 +131,7 @@ ls_xored() {
 text_xored_ok() {
     [ -d xortool_out ]
     grep -q "b'"'\\xde\\xad\\xbe\\xef'"'" xortool_out/filename-key.csv
-    grep -q 'List of known bugs' xortool_out/*.out
+    grep -qr 'List of known bugs' xortool_out
 }
 
 text_xored() {
@@ -170,7 +171,7 @@ text_xored() {
 tool_xored_ok() {
     [ -d xortool_out ]
     grep -q "b'"'an0ther s3cret \\xdd key'"'" xortool_out/filename-key.csv
-    grep -q '# Author: hellman ( hellman1908@gmail.com )' xortool_out/*.out
+    grep -qr '# Author: hellman ( hellman1908@gmail.com )' xortool_out
 }
 
 tool_xored() {
