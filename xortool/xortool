@@ -46,6 +46,7 @@ import os
 import string
 import sys
 import xortool
+from xortool.charset import CharsetError
 from xortool.colors import *
 
 from xortool.routine import *
@@ -87,10 +88,14 @@ def main():
         print(C_FATAL + "[ERROR] Analysis error:\n\t", err, C_RESET)
     except ArgError as err:
         print(C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET)
+    except CharsetError as err:
+        print(C_FATAL + "[ERROR] Bad charset:\n\t", err, C_RESET)
     except IOError as err:
         print(C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET)
     except MkdirError as err:
         print(C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET)
+    except UnicodeDecodeError as err:
+        print(C_FATAL + "[ERROR] Input is not hex:\n\t", err, C_RESET)
     else:
         return
     cleanup()
