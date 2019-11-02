@@ -10,17 +10,13 @@ class MkdirError(Exception):
 def load_file(filename):
     if filename == "-":
         return sys.stdin.buffer.read()
-    fd = open(filename, "rb")
-    contents = fd.read()
-    fd.close()
-    return contents
+    with open(filename, "rb") as fd:
+        return fd.read()
 
 
 def save_file(filename, data):
-    fd = open(filename, "wb")
-    fd.write(data)
-    fd.close()
-    return
+    with open(filename, "wb") as fd:
+        fd.write(data)
 
 
 def mkdir(dirname):
