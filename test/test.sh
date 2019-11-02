@@ -7,7 +7,8 @@
 # $ ./test/test.sh
 # to test the globally installed xortool
 
-set -epux
+set -epux -o pipefail
+shopt -s inherit_errexit
 
 if [ $# -gt 0 ] && [ "dist" = "$1" ]; then
     export PATH="./xortool/:$PATH"
