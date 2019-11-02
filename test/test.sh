@@ -7,9 +7,12 @@
 # $ ./test/test.sh
 # to test the globally installed xortool
 
-[ "dist" = "$1" ] && export PATH="./xortool/:$PATH"
-
 set -epux
+
+if [ $# -gt 0 ] && [ "dist" = "$1" ]; then
+    export PATH="./xortool/:$PATH"
+    export PYTHONPATH="."
+fi
 
 binary_xored_ok() {
     [ -d xortool_out ]
