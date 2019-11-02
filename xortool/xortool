@@ -186,13 +186,19 @@ def print_fitnesses(fitnesses):
     top10.sort(key=itemgetter(0))
 
     fitness_sum = calculate_fitness_sum(top10)
+    fmt = "{C_KEYLEN}{:" + str(len(str(max(i[0] for i in top10)))) + \
+            "d}{C_RESET}: {C_PROB}{:5.1f}%{C_RESET}"
+
+    best_colors = COLORS.copy()
+    best_colors.update({
+        'C_KEYLEN': C_BEST_KEYLEN,
+        'C_PROB': C_BEST_PROB,
+    })
 
     for key_length, fitness in top10:
+        colors = best_colors if fitness == best_fitness else COLORS
         pct = round(100 * fitness * 1.0 / fitness_sum, 1)
-        if fitness == best_fitness:
-            print("{C_BEST_KEYLEN}{:4d}{C_RESET}:   {C_BEST_PROB}{:5.1f}%{C_RESET}".format(key_length, pct, **COLORS))
-        else:
-            print("{C_KEYLEN}{:4d}{C_RESET}:   {C_PROB}{:5.1f}%{C_RESET}".format(key_length, pct, **COLORS))
+        print(fmt.format(key_length, pct, **colors))
 
 
 def calculate_fitness_sum(fitnesses):
