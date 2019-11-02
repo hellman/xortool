@@ -51,7 +51,7 @@ def rmdir(dirname):
     return
 
 def decode_from_hex(text):
-    text = text.decode("ascii")
+    text = text.decode(encoding='ascii', errors='ignore')
     only_hex_digits = "".join(c for c in text if c in string.hexdigits)
     return bytes.fromhex(only_hex_digits)
 
