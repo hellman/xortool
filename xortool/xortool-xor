@@ -96,11 +96,11 @@ def from_file(s):
 def arg_data(opt, s):
     if opt == "-s":
         return from_str(s)
-    elif opt == "-r":
+    if opt == "-r":
         return str.encode(s)
-    elif opt == "-h":
+    if opt == "-h":
         return bytes.fromhex(s)
-    elif opt == "-f":
+    if opt == "-f":
         return from_file(s)
     raise getopt.GetoptError("unknown option -%s" % opt)
 
