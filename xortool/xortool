@@ -321,7 +321,7 @@ def print_keys(keys):
     fmt = "{C_COUNT}{:d}{C_RESET} possible key(s) of length {C_COUNT}{:d}{C_RESET}:"
     print(fmt.format(len(keys), len(keys[0]), **COLORS))
     for key in keys[:5]:
-        print(C_KEY + repr(key)[1:-1] + C_RESET)
+        print(C_KEY + repr(key)[2:-1] + C_RESET)
     if len(keys) > 10:
         print("...")
 
