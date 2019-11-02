@@ -53,7 +53,7 @@ def main():
 def xor(args, nocycle=False):
     # Sort by len DESC
     args.sort(key=len, reverse=True)
-    res = list(args.pop(0))
+    res = bytearray(args.pop(0))
     maxlen = len(res)
 
     for s in args:
@@ -61,7 +61,7 @@ def xor(args, nocycle=False):
         srange = range(slen if nocycle else maxlen)
         for i in srange:
             res[i] ^= s[i % slen]
-    return bytes(res)
+    return res
 
 
 def from_str(s):
