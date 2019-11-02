@@ -30,4 +30,4 @@ def get_charset(charset):
             _ += CHARSETS[c].encode("ascii")
         return _
     except KeyError:
-        raise CharsetError("Bad character set")
+        raise CharsetError("Bad character set: ", charset)
