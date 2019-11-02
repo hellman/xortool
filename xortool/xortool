@@ -41,11 +41,15 @@ Examples:
 """
 
 from operator import itemgetter
-
 import os
 import string
 import sys
+
 import xortool
+from xortool.args import (
+    parse_parameters,
+    ArgError,
+)
 from xortool.charset import CharsetError
 from xortool.colors import (
     COLORS,
@@ -56,9 +60,16 @@ from xortool.colors import (
     C_RESET,
     C_WARN,
 )
+from xortool.routine import (
+    decode_from_hex,
+    dexor,
+    die,
+    load_file,
+    mkdir,
+    rmdir,
+    MkdirError,
+)
 
-from xortool.routine import *
-from xortool.args import parse_parameters, ArgError
 
 DIRNAME = 'xortool_out'  # here plaintexts will be placed
 PARAMETERS = dict()
