@@ -44,6 +44,7 @@ from operator import itemgetter
 
 import os
 import string
+import sys
 import xortool
 from xortool.colors import *
 
@@ -93,6 +94,7 @@ def main():
     else:
         return
     cleanup()
+    sys.exit(1)
 
 
 # -----------------------------------------------------------------------------
