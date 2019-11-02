@@ -51,12 +51,8 @@ from xortool.colors import (
     COLORS,
     C_BEST_KEYLEN,
     C_BEST_PROB,
-    C_COUNT,
-    C_DIV,
     C_FATAL,
     C_KEY,
-    C_KEYLEN,
-    C_PROB,
     C_RESET,
     C_WARN,
 )
@@ -195,14 +191,11 @@ def print_fitnesses(fitnesses):
     fitness_sum = calculate_fitness_sum(top10)
 
     for key_length, fitness in top10:
-        s1 = str(key_length).rjust(4, " ")
-        s2 = str(round(100 * fitness * 1.0 / fitness_sum, 1)) + "%"
+        pct = round(100 * fitness * 1.0 / fitness_sum, 1)
         if fitness == best_fitness:
-            print((C_BEST_KEYLEN + s1 + C_RESET + ":   "
-                   + C_BEST_PROB + s2 + C_RESET))
+            print("{C_BEST_KEYLEN}{:4d}{C_RESET}:   {C_BEST_PROB}{:5.1f}%{C_RESET}".format(key_length, pct, **COLORS))
         else:
-            print((C_KEYLEN + s1 + C_RESET + ":   "
-                   + C_PROB + s2 + C_RESET))
+            print("{C_KEYLEN}{:4d}{C_RESET}:   {C_PROB}{:5.1f}%{C_RESET}".format(key_length, pct, **COLORS))
     return
 
 
@@ -237,9 +230,10 @@ def guess_and_print_divisors(fitnesses):
 
     limit = 3
     ret = 2
+    fmt = "Key-length can be {C_DIV}{:d}*n{C_RESET}"
     for number, divisors_count in enumerate(divisors_counts):
         if divisors_count == max_divisors:
-            print("Key-length can be " + C_DIV + str(number) + "*n" + C_RESET)
+            print(fmt.format(number, **COLORS))
             ret = number
             limit -= 1
             if limit == 0:
@@ -324,9 +318,8 @@ def print_keys(keys):
         print("No keys guessed!")
         return
 
-    s1 = C_COUNT + str(len(keys)) + C_RESET
-    s2 = C_COUNT + str(len(keys[0])) + C_RESET
-    print("{} possible key(s) of length {}:".format(s1, s2))
+    fmt = "{C_COUNT}{:d}{C_RESET} possible key(s) of length {C_COUNT}{:d}{C_RESET}:"
+    print(fmt.format(len(keys), len(keys[0]), **COLORS))
     for key in keys[:5]:
         print(C_KEY + repr(key)[1:-1] + C_RESET)
     if len(keys) > 10:
@@ -397,10 +390,8 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     key_mapping.close()
     perc_mapping.close()
 
-    s1 = C_COUNT + str(count_valid) + C_RESET
-    s2 = C_COUNT + str(round(threshold_valid)) + C_RESET
-
-    print("Found {} plaintexts with {}%+ valid characters".format(s1, s2))
+    fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
+    print(fmt.format(count_valid, round(threshold_valid), **COLORS))
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
     return
 
