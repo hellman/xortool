@@ -41,14 +41,35 @@ Examples:
 """
 
 from operator import itemgetter
-
 import os
 import string
-import xortool
-from xortool.colors import *
+import sys
 
-from xortool.routine import *
-from xortool.args import parse_parameters, ArgError
+import xortool
+from xortool.args import (
+    parse_parameters,
+    ArgError,
+)
+from xortool.charset import CharsetError
+from xortool.colors import (
+    COLORS,
+    C_BEST_KEYLEN,
+    C_BEST_PROB,
+    C_FATAL,
+    C_KEY,
+    C_RESET,
+    C_WARN,
+)
+from xortool.routine import (
+    decode_from_hex,
+    dexor,
+    die,
+    load_file,
+    mkdir,
+    rmdir,
+    MkdirError,
+)
+
 
 DIRNAME = 'xortool_out'  # here plaintexts will be placed
 PARAMETERS = dict()
@@ -59,17 +80,17 @@ class AnalysisError(Exception):
 
 
 def main():
-    global PARAMETERS
     try:
-        PARAMETERS = parse_parameters(__doc__, xortool.__version__)
+        PARAMETERS.update(parse_parameters(__doc__, xortool.__version__))
         ciphertext = get_ciphertext()
-        update_key_length(ciphertext)
+        if not PARAMETERS["known_key_length"]:
+            PARAMETERS["known_key_length"] = guess_key_length(ciphertext)
 
         if PARAMETERS["brute_chars"]:
             try_chars = range(256)
         elif PARAMETERS["brute_printable"]:
             try_chars = map(ord, string.printable)
-        elif PARAMETERS["most_frequent_char"] != None:
+        elif PARAMETERS["most_frequent_char"] is not None:
             try_chars = [PARAMETERS["most_frequent_char"]]
         else:
             die(C_WARN +
@@ -82,17 +103,22 @@ def main():
         print_keys(probable_keys)
         produce_plaintexts(ciphertext, probable_keys, key_char_used)
 
-    except IOError as err:
-        print(C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET)
-    except ArgError as err:
-        print(C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET)
-    except MkdirError as err:
-        print(C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET)
     except AnalysisError as err:
         print(C_FATAL + "[ERROR] Analysis error:\n\t", err, C_RESET)
+    except ArgError as err:
+        print(C_FATAL + "[ERROR] Bad argument:\n\t", err, C_RESET)
+    except CharsetError as err:
+        print(C_FATAL + "[ERROR] Bad charset:\n\t", err, C_RESET)
+    except IOError as err:
+        print(C_FATAL + "[ERROR] Can't load file:\n\t", err, C_RESET)
+    except MkdirError as err:
+        print(C_FATAL + "[ERROR] Can't create directory:\n\t", err, C_RESET)
+    except UnicodeDecodeError as err:
+        print(C_FATAL + "[ERROR] Input is not hex:\n\t", err, C_RESET)
     else:
         return
     cleanup()
+    sys.exit(1)
 
 
 # -----------------------------------------------------------------------------
@@ -100,9 +126,7 @@ def main():
 # -----------------------------------------------------------------------------
 
 def get_ciphertext():
-    """
-    Load ciphertext from a file or stdin and hex-decode if needed
-    """
+    """Load ciphertext from a file or stdin and hex-decode if needed"""
     ciphertext = load_file(PARAMETERS["filename"])
     if PARAMETERS["input_is_hex"]:
         ciphertext = decode_from_hex(ciphertext)
@@ -113,20 +137,10 @@ def get_ciphertext():
 # KEYLENGTH GUESSING SECTION
 # -----------------------------------------------------------------------------
 
-def update_key_length(text):
-    """
-    Guess length of the key if it's not set. (Updates PARAMETERS)
-    """
-    global PARAMETERS
-    if PARAMETERS["known_key_length"]:
-        return
-    PARAMETERS["known_key_length"] = guess_key_length(text)
-    return
-
-
 def guess_key_length(text):
     """
-    Try key lengths from 1 to max_key_length and print local maximums.
+    Try key lengths from 1 to max_key_length and print local maximums
+
     Set key_length to the most possible if it's not set by user.
     """
     fitnesses = calculate_fitnesses(text)
@@ -139,9 +153,7 @@ def guess_key_length(text):
 
 
 def calculate_fitnesses(text):
-    """
-    Calc. fitnesses for each keylen
-    """
+    """Calculate fitnesses for each keylen"""
     prev = 0
     pprev = 0
     fitnesses = []
@@ -174,17 +186,19 @@ def print_fitnesses(fitnesses):
     top10.sort(key=itemgetter(0))
 
     fitness_sum = calculate_fitness_sum(top10)
+    fmt = "{C_KEYLEN}{:" + str(len(str(max(i[0] for i in top10)))) + \
+            "d}{C_RESET}: {C_PROB}{:5.1f}%{C_RESET}"
+
+    best_colors = COLORS.copy()
+    best_colors.update({
+        'C_KEYLEN': C_BEST_KEYLEN,
+        'C_PROB': C_BEST_PROB,
+    })
 
     for key_length, fitness in top10:
-        s1 = str(key_length).rjust(4, " ")
-        s2 = str(round(100 * fitness * 1.0 / fitness_sum, 1)) + "%"
-        if fitness == best_fitness:
-            print((C_BEST_KEYLEN + s1 + C_RESET + ":   "
-                   + C_BEST_PROB + s2 + C_RESET))
-        else:
-            print((C_KEYLEN + s1 + C_RESET + ":   "
-                   + C_PROB + s2 + C_RESET))
-    return
+        colors = best_colors if fitness == best_fitness else COLORS
+        pct = round(100 * fitness * 1.0 / fitness_sum, 1)
+        print(fmt.format(key_length, pct, **colors))
 
 
 def calculate_fitness_sum(fitnesses):
@@ -192,9 +206,7 @@ def calculate_fitness_sum(fitnesses):
 
 
 def count_equals(text, key_length):
-    """
-    count equal chars count for each offset and sum them
-    """
+    """Count equal chars count for each offset and sum them"""
     equals_count = 0
     if key_length >= len(text):
         return 0
@@ -218,9 +230,10 @@ def guess_and_print_divisors(fitnesses):
 
     limit = 3
     ret = 2
+    fmt = "Key-length can be {C_DIV}{:d}*n{C_RESET}"
     for number, divisors_count in enumerate(divisors_counts):
         if divisors_count == max_divisors:
-            print("Key-length can be " + C_DIV + str(number) + "*n" + C_RESET)
+            print(fmt.format(number, **COLORS))
             ret = number
             limit -= 1
             if limit == 0:
@@ -305,11 +318,10 @@ def print_keys(keys):
         print("No keys guessed!")
         return
 
-    s1 = C_COUNT + str(len(keys)) + C_RESET
-    s2 = C_COUNT + str(len(keys[0])) + C_RESET
-    print("{} possible key(s) of length {}:".format(s1, s2))
+    fmt = "{C_COUNT}{:d}{C_RESET} possible key(s) of length {C_COUNT}{:d}{C_RESET}:"
+    print(fmt.format(len(keys), len(keys[0]), **COLORS))
     for key in keys[:5]:
-        print(C_KEY + repr(key)[1:-1] + C_RESET)
+        print(C_KEY + repr(key)[2:-1] + C_RESET)
     if len(keys) > 10:
         print("...")
 
@@ -319,7 +331,6 @@ def print_keys(keys):
 # -----------------------------------------------------------------------------
 
 def percentage_valid(text):
-    global PARAMETERS
     x = 0.0
     for c in text:
         if c in PARAMETERS["text_charset"]:
@@ -337,8 +348,6 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     creates csv files with keys, percentage of valid
     characters and used most frequent character
     """
-    global PARAMETERS
-
     cleanup()
     mkdir(DIRNAME)
 
@@ -378,18 +387,14 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     key_mapping.close()
     perc_mapping.close()
 
-    s1 = C_COUNT + str(count_valid) + C_RESET
-    s2 = C_COUNT + str(round(threshold_valid)) + C_RESET
-
-    print("Found {} plaintexts with {}%+ valid characters".format(s1, s2))
+    fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
+    print(fmt.format(count_valid, round(threshold_valid), **COLORS))
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
-    return
 
 
 def cleanup():
     if os.path.exists(DIRNAME):
         rmdir(DIRNAME)
-    return
 
 
 if __name__ == "__main__":

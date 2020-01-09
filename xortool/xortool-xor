@@ -8,37 +8,40 @@ options:
     -r  -  raw string
     -h  -  hex-encoded string (non-letterdigit chars are stripped)
     -f  -  read data from file (- for stdin)
-    -n  -  no newline at the end
+
+    --newline -  newline at the end (default)
+    -n / --no-newline -  no newline at the end
+    --cycle - do not pad (default)
     --no-cycle / --nc  -  pad smaller strings with null bytes
 example: xor -s lol -h 414243 -f /etc/passwd
 
 author: hellman ( hellman1908@gmail.com )
 """
 
-from __future__ import print_function
-import sys
-import string
 import getopt
-
-
-DATA_OPTS = "s:r:h:f:"
-HEXES = set("0123456789abcdefABCDEF")
+import string
+import sys
 
 
 def main():
-    nocycle = False
-    nonewline = False
+    cycle = True
+    newline = True
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "n" + DATA_OPTS, ["no-cycle", "nc"])
+        opts, _ = getopt.getopt(
+            sys.argv[1:], "ns:r:h:f:",
+            ["cycle", "no-cycle", "nc", "no-newline", "newline"])
         datas = []
         for c, val in opts:
-            if c in ("--no-cycle", "--nc"):
-                nocycle = True
-            elif c == "-n":
-                nonewline = True
+            if c == "--cycle":
+                cycle = True
+            elif c in ("--no-cycle", "--nc"):
+                cycle = False
+            elif c == "--newline":
+                newline = True
+            elif c in ("-n", "--no-newline"):
+                newline = False
             else:
-                v = arg_data(c, val)
-                datas.append(v)
+                datas.append(arg_data(c, val))
         if not datas:
             raise getopt.GetoptError("no data given")
     except getopt.GetoptError as e:
@@ -46,55 +49,45 @@ def main():
         print(__doc__, file=sys.stderr)
         quit()
 
-    sys.stdout.buffer.write(xor(datas, nocycle=nocycle))
-    if not nonewline:
+    sys.stdout.buffer.write(xor(datas, cycle=cycle))
+    if newline:
         sys.stdout.buffer.write(b"\n")
 
 
-def xor(args, nocycle=False):
+def xor(args, cycle=True):
     # Sort by len DESC
     args.sort(key=len, reverse=True)
-    res = list(args.pop(0))
+    res = bytearray(args.pop(0))
     maxlen = len(res)
 
     for s in args:
         slen = len(s)
-        srange = range(slen if nocycle else maxlen)
-        for i in srange:
+        for i in range(maxlen if cycle else slen):
             res[i] ^= s[i % slen]
-    return bytes(res)
+    return res
 
 
 def from_str(s):
-    res = []
-    i = 0
-    while True:
-        if i + 4 > len(s):
-            break
+    res = b''
+    for char in s.encode("utf-8").decode("unicode_escape"):
+        res += bytes([ord(char)])
+    return res
 
-        if s[i] == "\\" and s[i+1] == "x" and s[i+2] in HEXES and s[i+3] in HEXES:
-            res.append(int(s[i+2:i+4], 16))
-            i += 4
-        else:
-            res.append(ord(s[i]))
-            i += 1
-    res += s[i:].encode("ascii")
-    return bytes(res)
 
 def from_file(s):
     if s == "-":
-        return sys.stdin.buffer.read()
+        s = sys.stdin.fileno()
     return open(s, "rb").read()
 
 
 def arg_data(opt, s):
     if opt == "-s":
         return from_str(s)
-    elif opt == "-r":
+    if opt == "-r":
         return str.encode(s)
-    elif opt == "-h":
+    if opt == "-h":
         return bytes.fromhex(s)
-    elif opt == "-f":
+    if opt == "-f":
         return from_file(s)
     raise getopt.GetoptError("unknown option -%s" % opt)
 
