@@ -1,7 +1,6 @@
-#!/usr/bin/env python2
-#-*- coding:utf-8 -*-
+#!/usr/bin/env python3
 
-from distutils.core import setup
+from setuptools import setup
 
 import xortool
 
@@ -21,6 +20,7 @@ setup(name='xortool',
       packages=['xortool'],
       provides=['xortool'],
       install_requires=['docopt>=0.6.1'],
+      setup_requires=['wheel'],
       scripts=["xortool/xortool", "xortool/xortool-xor"],
 
       python_requires='>=3',
