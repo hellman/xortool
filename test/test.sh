@@ -186,9 +186,9 @@ tool_xored test/data/tool_xored
 
 xortool -c 00 --key-length=10 test/data/binary_xored
 f_cmp="$(grep 'secret_key' xortool_out/filename-key.csv|cut -d\; -f1)"
-./xortool/xortool-xor -n -r secret_key -f "$f_cmp" | \
+xortool-xor -n -r secret_key -f "$f_cmp" | \
     cmp test/data/binary_xored
-./xortool/xortool-xor -n -r secret_key -f test/data/binary_xored | \
+xortool-xor -n -r secret_key -f test/data/binary_xored | \
     cmp "$f_cmp"
 
 echo OK
