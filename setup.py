@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding:utf-8 -*-
 
-from distutils.core import setup
+from setuptools import setup
 
 import xortool
 
@@ -15,19 +14,21 @@ setup(name='xortool',
       url='https://github.com/hellman/xortool',
       description='Tool for xor cipher analysis',
       long_description=open("README.md").read(),  # not in rst, but something
+      long_description_content_type="text/markdown",
       keywords="xor xortool analysis",
 
       packages=['xortool'],
       provides=['xortool'],
       install_requires=['docopt>=0.6.1'],
+      setup_requires=['wheel'],
       scripts=["xortool/xortool", "xortool/xortool-xor"],
 
+      python_requires='>=3',
       classifiers=['Development Status :: 4 - Beta',
                    'Intended Audience :: Science/Research',
                    'Intended Audience :: Information Technology',
                    'Natural Language :: English',
                    'Operating System :: OS Independent',
-                   'Programming Language :: Python :: 2',
                    'Programming Language :: Python :: 3',
                    'License :: OSI Approved :: MIT License',
                    'Topic :: Scientific/Engineering :: Mathematics',

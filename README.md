@@ -6,7 +6,17 @@ A tool to do some xor analysis:
   - guess the key length (based on count of equal chars)
   - guess the key (base on knowledge of most frequent char)
 
-**Notice:** xortool is moving to Python 3, the PyPI package will be upgraded soon. The old Python 2 version is accessible at the `py2` branch.
+**Notice:** xortool is now only running on Python 3. The old Python 2 version is accessible at the `py2` branch. The **pip** package has been updated.
+
+Installation
+---------------------
+
+**xortool** can be installed using **pip**. The recommended way is to run the following command, which installs xortool only for current user. Remove the `--user` flag and run from root if global installation is preferred.
+
+```bash
+python3 -m pip install --user xortool
+```
+
 
 Usage
 ---------------------
@@ -175,6 +185,6 @@ By filtering the outputs on the character set of Base64, we directly keep the on
 Information
 ---------------------
 
-Author: hellman ( hellman1908@gmail.com )
+Author: hellman
 
-License: MIT License (opensource.org/licenses/MIT)
+License: [MIT License](https://opensource.org/licenses/MIT)
