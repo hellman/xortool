@@ -29,8 +29,8 @@ xortool
 
 Usage:
   xortool [-x] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [FILE]
+  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
+  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
   xortool [-h | --help]
   xortool --version
 
@@ -43,6 +43,7 @@ Options:
   -o --brute-printable              same as -b but will only check printable chars
   -f --filter-output                filter outputs based on the charset
   -t CHARSET --text-charset=CHARSET target text character set [default: printable]
+  -p PLAIN --known-plaintext=PLAIN  use known plaintext for decoding
   -h --help                         show this help
 
 Notes:
@@ -60,6 +61,7 @@ Examples:
   xortool -l 11 -c 20 file.bin
   xortool -x -c ' ' file.hex
   xortool -b -f -l 23 -t base64 message.enc
+  xortool -b -p "xctf{" message.enc
 ```
 
 Example 1

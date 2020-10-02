@@ -7,8 +7,8 @@ xortool
 
 Usage:
   xortool [-x] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [FILE]
+  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
+  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
   xortool [-h | --help]
   xortool --version
 
@@ -21,6 +21,7 @@ Options:
   -o --brute-printable              same as -b but will only check printable chars
   -f --filter-output                filter outputs based on the charset
   -t CHARSET --text-charset=CHARSET target text character set [default: printable]
+  -p PLAIN --known-plaintext=PLAIN  use known plaintext for decoding
   -h --help                         show this help
 
 Notes:
@@ -372,6 +373,9 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
         file_name = os.path.join(DIRNAME, key_index + ".out")
 
         dexored = dexor(ciphertext, key)
+        # ignore saving file when known plain is provided and output doesn't contain it
+        if PARAMETERS["known_plain"] and PARAMETERS["known_plain"] not in dexored:
+            continue
         perc = round(100 * percentage_valid(dexored))
         if perc > threshold_valid:
             count_valid += 1
@@ -388,6 +392,8 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     perc_mapping.close()
 
     fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
+    if PARAMETERS["known_plain"]:
+        fmt += " which contained '{}'".format(PARAMETERS["known_plain"].decode('ascii'))
     print(fmt.format(count_valid, round(threshold_valid), **COLORS))
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
 
