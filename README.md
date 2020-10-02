@@ -14,8 +14,6 @@ A tool to do some xor analysis:
 $ pip3 install xortool
 ```
 
-## Development
-
 For development or building this repository, [poetry](https://python-poetry.org/) is needed.
 
 
