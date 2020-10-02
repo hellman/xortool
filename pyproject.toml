@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "xortool"
+version = "1.0.0"
+description = "A tool to analyze multi-byte xor cipher"
+authors = ["hellman"]
+license = "MIT"
+readme = "README.md"
+keywords = ["xor", "xortool", "cryptanalysis"]
+classifiers = [
+    'Intended Audience :: Information Technology',
+    'Intended Audience :: Science/Research',
+    'Topic :: Security :: Cryptography',
+]
+
+[tool.poetry.scripts]
+xortool = 'xortool.tool_main:main'
+xortool-xor = 'xortool.tool_xor:main'
+
+[tool.poetry.urls]
+homepage = "http://github.com/hellman/xortool"
+
+[tool.poetry.dependencies]
+python = "^3.4"
+docopt = "^0.6.2"
+
+[tool.poetry.dev-dependencies]
+docopt = "^0.6.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0a5"]
+build-backend = "poetry.core.masonry.api"

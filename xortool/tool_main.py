@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""
-xortool
+from xortool import __version__
+__doc__ = f"""
+xortool {__version__}
   A tool to do some xor analysis:
   - guess the key length (based on count of equal chars)
   - guess the key (base on knowledge of most frequent char)
@@ -46,7 +47,6 @@ import os
 import string
 import sys
 
-import xortool
 from xortool.args import (
     parse_parameters,
     ArgError,
@@ -82,7 +82,7 @@ class AnalysisError(Exception):
 
 def main():
     try:
-        PARAMETERS.update(parse_parameters(__doc__, xortool.__version__))
+        PARAMETERS.update(parse_parameters(__doc__, __version__))
         ciphertext = get_ciphertext()
         if not PARAMETERS["known_key_length"]:
             PARAMETERS["known_key_length"] = guess_key_length(ciphertext)

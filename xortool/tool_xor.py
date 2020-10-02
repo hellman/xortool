@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-#-*- coding:utf-8 -*-
-
-"""
+from xortool import __version__
+__doc__ = f"""
+xortool-xor {__version__}
 xor strings
 options:
     -s  -  string with \\xAF escapes
@@ -14,12 +14,9 @@ options:
     --cycle - do not pad (default)
     --no-cycle / --nc  -  pad smaller strings with null bytes
 example: xor -s lol -h 414243 -f /etc/passwd
-
-author: hellman ( hellman1908@gmail.com )
 """
 
 import getopt
-import string
 import sys
 
 
