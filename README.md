@@ -8,14 +8,15 @@ A tool to do some xor analysis:
 
 **Notice:** xortool is now only running on Python 3. The old Python 2 version is accessible at the `py2` branch. The **pip** package has been updated.
 
-Installation
----------------------
-
-**xortool** can be installed using **pip**. The recommended way is to run the following command, which installs xortool only for current user. Remove the `--user` flag and run from root if global installation is preferred.
+## Installation
 
 ```bash
-python3 -m pip install --user xortool
+$ pip3 install xortool
 ```
+
+## Development
+
+For development or building this repository, [poetry](https://python-poetry.org/) is needed.
 
 
 Usage
