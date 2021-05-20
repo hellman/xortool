@@ -121,7 +121,20 @@ def main():
     cleanup()
     sys.exit(1)
 
+def xortool_api(ciphertext, config):
+    PARAMETERS.update(parse_parameters(__doc__, __version__))
+    PARAMETERS["known_key_length"] = guess_key_length(ciphertext)
 
+    try_chars = " "
+
+    (probable_keys,
+         key_char_used) = guess_probable_keys_for_chars(ciphertext, try_chars)
+    
+    out["Printable"] = api_print_keys(probable_keys)
+    out["Plaintext"] = produce_plaintexts(ciphertext, probable_keys, key_char_used)
+    
+    return out
+    
 # -----------------------------------------------------------------------------
 # LOADING CIPHERTEXT
 # -----------------------------------------------------------------------------
@@ -312,6 +325,16 @@ def all_keys(key_possible_bytes, key_part=(), offset=0):
     for c in key_possible_bytes[offset]:
         keys += all_keys(key_possible_bytes, key_part + (c,), offset + 1)
     return keys
+
+def api_print_keys(keys):
+    fmt = "{C_COUNT}{:d}{C_RESET} possible key(s) of length {C_COUNT}{:d}{C_RESET}:"
+    to_print = ""
+    to_print += fmt.format(len(keys), len(keys[0]), **COLORS)
+    for key in keys[:5]:
+        to_print += (C_KEY + repr(key)[2:-1] + C_RESET)
+    if len(keys) > 10:
+        to_print += ("...")
+    return to_print
 
 
 def print_keys(keys):
