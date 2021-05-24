@@ -95,10 +95,12 @@ def parse_char(ch):
         raise ValueError("Char can be only a char letter or hex")
     return int(ch, 16)
 
-def api(text, config):
+def api(text = 'Uihr!hr!`!udru!gns!YNS-!hu!hr!sd`mmx!mnof!un!l`jd!rtsd!ui`u!YNSunnm!b`o!fdu!hu/!Bhqidx!*!YNSunnm!hr!bnnm/', config = {"most_frequent_char": " "}):
+
     PARAMETERS.update(parse_parameters(__doc__, __version__))
 
     ciphertext = str.encode(text)
+    print(PARAMETERS["most_frequent_char"])
     PARAMETERS["most_frequent_char"] = parse_char(config["most_frequent_char"])
     try_chars = [PARAMETERS["most_frequent_char"]]
     print("i get to here")
@@ -108,9 +110,13 @@ def api(text, config):
     (probable_keys,
          key_char_used) = guess_probable_keys_for_chars(ciphertext, try_chars)
 
-    print_keys(probable_keys)
-    print(print_keys)
-    produce_plaintexts(ciphertext, probable_keys, key_char_used)
+    keys = print_keys(probable_keys)
+    print("\n")
+    print(keys)
+    print("\n")
+    plaintext = produce_plaintexts(ciphertext, probable_keys, key_char_used)
+    import pprint 
+    pprint.pprint(plaintext)
 
 def main():
     try:
@@ -386,20 +392,22 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     creates csv files with keys, percentage of valid
     characters and used most frequent character
     """
-    cleanup()
-    mkdir(DIRNAME)
 
     # this is split up in two files since the
     # key can contain all kinds of characters
 
-    fn_key_mapping = "filename-key.csv"
-    fn_perc_mapping = "filename-char_used-perc_valid.csv"
+    result = {}
 
-    key_mapping = open(os.path.join(DIRNAME,  fn_key_mapping), "w")
-    perc_mapping = open(os.path.join(DIRNAME, fn_perc_mapping), "w")
+    # key repr
+    result["fn_key_mapping"] = {}
+    fn_key_mapping = result["fn_key_mapping"]
 
-    key_mapping.write("file_name;key_repr\n")
-    perc_mapping.write("file_name;char_used;perc_valid\n")
+    # char used, percent valid
+    result["filename-char_used-perc_valid"] = {}
+    fn_perc_mapping = result["filename-char_used-perc_valid"]
+
+    key_mapping = fn_key_mapping
+    perc_mapping = fn_perc_mapping
 
     threshold_valid = 95
     count_valid = 0
@@ -407,7 +415,7 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     for index, key in enumerate(keys):
         key_index = str(index).rjust(len(str(len(keys) - 1)), "0")
         key_repr = repr(key)
-        file_name = os.path.join(DIRNAME, key_index + ".out")
+        # file_name = os.path.join(DIRNAME, key_index + ".out")
 
         dexored = dexor(ciphertext, key)
         # ignore saving file when known plain is provided and output doesn't contain it
@@ -416,23 +424,22 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
         perc = round(100 * percentage_valid(dexored))
         if perc > threshold_valid:
             count_valid += 1
-        key_mapping.write("{};{}\n".format(file_name, key_repr))
-        perc_mapping.write("{};{};{}\n".format(file_name,
-                                               repr(key_char_used[key]),
-                                               perc))
+        
+        key_mapping[key_index] = key_repr
+
+        # [key_char_used, percentage]
+        perc_mapping[key_index] = [key_char_used[key], perc]
         if not PARAMETERS["filter_output"] or \
             (PARAMETERS["filter_output"] and perc > threshold_valid):
-            f = open(file_name, "wb")
-            f.write(dexored)
-            f.close()
-    key_mapping.close()
-    perc_mapping.close()
+            result["Dexored"] = dexored
 
-    fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
     if PARAMETERS["known_plain"]:
-        fmt += " which contained '{}'".format(PARAMETERS["known_plain"].decode('ascii'))
-    print(fmt.format(count_valid, round(threshold_valid), **COLORS))
-    print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
+        # Is this a crib, known plaintext given?
+        result["known_plain"] = PARAMETERS["known_plain"].decode('ascii')
+    
+    result["fn_key_mapping"] = fn_key_mapping
+    result["perc_mapping"] = fn_perc_mapping
+    return result
 
 
 def cleanup():
