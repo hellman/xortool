@@ -78,7 +78,39 @@ PARAMETERS = dict()
 
 class AnalysisError(Exception):
     pass
+def parse_char(ch):
+    """
+    'A' or '\x41' or '0x41' or '41'
+    '\x00' or '0x00' or '00'
+    """
+    if ch is None:
+        return None
+    if len(ch) == 1:
+        return ord(ch)
+    if ch[0:2] in ("0x", "\\x"):
+        ch = ch[2:]
+    if not ch:
+        raise ValueError("Empty char")
+    if len(ch) > 2:
+        raise ValueError("Char can be only a char letter or hex")
+    return int(ch, 16)
 
+def api(text, config):
+    PARAMETERS.update(parse_parameters(__doc__, __version__))
+
+    ciphertext = str.encode(text)
+    PARAMETERS["most_frequent_char"] = parse_char(config["most_frequent_char"])
+    try_chars = [PARAMETERS["most_frequent_char"]]
+    print("i get to here")
+    if not PARAMETERS["known_key_length"]:
+        PARAMETERS["known_key_length"] = guess_key_length(ciphertext)
+    
+    (probable_keys,
+         key_char_used) = guess_probable_keys_for_chars(ciphertext, try_chars)
+
+    print_keys(probable_keys)
+    print(print_keys)
+    produce_plaintexts(ciphertext, probable_keys, key_char_used)
 
 def main():
     try:
@@ -315,14 +347,19 @@ def all_keys(key_possible_bytes, key_part=(), offset=0):
 
 
 def print_keys(keys):
+
     if not keys:
-        print("No keys guessed!")
-        return
+        return {"Keys": "No keys guessed!"}
+
+    possible_keys = {"keys": []}
 
     fmt = "{C_COUNT}{:d}{C_RESET} possible key(s) of length {C_COUNT}{:d}{C_RESET}:"
     print(fmt.format(len(keys), len(keys[0]), **COLORS))
     for key in keys[:5]:
-        print(C_KEY + repr(key)[2:-1] + C_RESET)
+        possible_keys["keys"].append(repr(key)[2:-1])
+    return possible_keys
+
+    # TODO do we want to include >10 keys? Will this slow the program down?
     if len(keys) > 10:
         print("...")
 
