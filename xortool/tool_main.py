@@ -393,7 +393,10 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
 
     fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
     if PARAMETERS["known_plain"]:
-        fmt += " which contained '{}'".format(PARAMETERS["known_plain"].decode('ascii'))
+        escaped_plain = PARAMETERS["known_plain"].decode('ascii')
+        escaped_plain = escaped_plain.replace("{", "{{").replace("}", "}}")
+
+        fmt += " which contained '{}'".format(escaped_plain)
     print(fmt.format(count_valid, round(threshold_valid), **COLORS))
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
 
