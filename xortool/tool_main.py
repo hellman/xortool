@@ -393,6 +393,11 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
 
     fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
     if PARAMETERS["known_plain"]:
+        # If the known_plain parameter contains { or },
+        # it screws up the format string resulting in an exception.
+        # 
+        # Here we just escape the brackets and append to the new fmt string.
+        
         escaped_plain = PARAMETERS["known_plain"].decode('ascii')
         escaped_plain = escaped_plain.replace("{", "{{").replace("}", "}}")
 
