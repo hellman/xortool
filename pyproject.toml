@@ -20,11 +20,12 @@ xortool-xor = 'xortool.tool_xor:main'
 homepage = "http://github.com/hellman/xortool"
 
 [tool.poetry.dependencies]
-python = "^3.4"
+python = ">=3.6,<4.0"
 docopt = "^0.6.2"
 
 [tool.poetry.dev-dependencies]
 docopt = "^0.6.2"
+importlib_metadata = "4.8`"
 
 [build-system]
 requires = ["poetry-core>=1.0.0a5"]
