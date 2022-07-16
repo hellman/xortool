@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "xortool"
-version = "1.0.0"
+version = "1.0.2"
 description = "A tool to analyze multi-byte xor cipher"
 authors = ["hellman"]
 license = "MIT"

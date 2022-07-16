@@ -392,9 +392,10 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     perc_mapping.close()
 
     fmt = "Found {C_COUNT}{:d}{C_RESET} plaintexts with {C_COUNT}{:d}{C_RESET}%+ valid characters"
+    msg = fmt.format(count_valid, round(threshold_valid), **COLORS)
     if PARAMETERS["known_plain"]:
-        fmt += " which contained '{}'".format(PARAMETERS["known_plain"].decode('ascii'))
-    print(fmt.format(count_valid, round(threshold_valid), **COLORS))
+        msg += " which contained '{}'".format(PARAMETERS["known_plain"].decode('ascii'))
+    print(msg)
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
 
 
