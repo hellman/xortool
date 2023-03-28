@@ -17,6 +17,11 @@ $ pip3 install xortool
 For development or building this repository, [poetry](https://python-poetry.org/) is needed.
 
 
+```bash
+poetry build
+pip install dist/xortool*.whl
+```
+
 Usage
 ---------------------
 
