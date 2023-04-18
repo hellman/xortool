@@ -43,6 +43,7 @@ Options:
   -f --filter-output                filter outputs based on the charset
   -t CHARSET --text-charset=CHARSET target text character set [default: printable]
   -p PLAIN --known-plaintext=PLAIN  use known plaintext for decoding
+  -r PERCENT, --threshold=PERCENT   threshold validity percentage [default: 95]
   -h --help                         show this help
 
 Notes:
@@ -61,6 +62,7 @@ Examples:
   xortool -x -c ' ' file.hex
   xortool -b -f -l 23 -t base64 message.enc
   xortool -b -p "xctf{" message.enc
+  xortool -r 80 -p "flag{" -c ' ' message.enc
 ```
 
 Example 1

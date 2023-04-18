@@ -41,6 +41,7 @@ Examples:
   xortool -l 11 -c 20 file.bin
   xortool -x -c ' ' file.hex
   xortool -b -f -l 23 -t base64 message.enc
+  xortool -r 80 -p "flag{{" -c ' ' message.enc
 """
 
 from operator import itemgetter
@@ -48,10 +49,10 @@ import os
 import string
 import sys
 
-from xortool.args import(
+from xortools.args import(
     parse_parameters,
     ArgError,
-    )
+)
 
 from xortool.charset import CharsetError
 from xortool.colors import (
