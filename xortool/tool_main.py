@@ -7,9 +7,9 @@ xortool {__version__}
   - guess the key (base on knowledge of most frequent char)
 
 Usage:
-  xortool [-x] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
-  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
+  xortool [-x] [-r PERCENT] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
+  xortool [-x] [-r PERCENT] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
+  xortool [-x] [-r PERCENT] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
   xortool [-h | --help]
   xortool --version
 
@@ -23,6 +23,7 @@ Options:
   -f --filter-output                filter outputs based on the charset
   -t CHARSET --text-charset=CHARSET target text character set [default: printable]
   -p PLAIN --known-plaintext=PLAIN  use known plaintext for decoding
+  -r PERCENT, --threshold=PERCENT   threshold validity percentage [default: 95]
   -h --help                         show this help
 
 Notes:
@@ -47,10 +48,11 @@ import os
 import string
 import sys
 
-from xortool.args import (
+from xortool.args import(
     parse_parameters,
     ArgError,
-)
+    )
+
 from xortool.charset import CharsetError
 from xortool.colors import (
     COLORS,
@@ -364,7 +366,12 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     key_mapping.write("file_name;key_repr\n")
     perc_mapping.write("file_name;char_used;perc_valid\n")
 
-    threshold_valid = 95
+    
+    if PARAMETERS["threshold"]:
+        threshold_valid = PARAMETERS["threshold"]
+    else:
+        threshold_valid = 95
+
     count_valid = 0
 
     for index, key in enumerate(keys):
