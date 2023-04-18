@@ -7,9 +7,9 @@ xortool {__version__}
   - guess the key (base on knowledge of most frequent char)
 
 Usage:
-  xortool [-x] [-r PERCENT] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-r PERCENT] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
-  xortool [-x] [-r PERCENT] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
+  xortool [-x] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
+  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [-r PERCENT] [FILE]
+  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [-r PERCENT] [FILE]
   xortool [-h | --help]
   xortool --version
 
@@ -49,7 +49,7 @@ import os
 import string
 import sys
 
-from xortools.args import(
+from xortool.args import(
     parse_parameters,
     ArgError,
 )
