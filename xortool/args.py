@@ -47,6 +47,7 @@ def parse_parameters(doc, version):
             "most_frequent_char": parse_char(p["char"]),
             "text_charset": get_charset(p["text-charset"]),
             "known_plain": p["known-plaintext"].encode() if p["known-plaintext"] else False,
+            "threshold": parse_int(p["threshold"]),
         }
     except ValueError as err:
         raise ArgError(str(err))

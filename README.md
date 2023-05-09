@@ -33,8 +33,8 @@ xortool
 
 Usage:
   xortool [-x] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
-  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
+  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [-r PERCENT] [FILE]
+  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [-r PERCENT] [FILE]
   xortool [-h | --help]
   xortool --version
 
@@ -48,6 +48,7 @@ Options:
   -f --filter-output                filter outputs based on the charset
   -t CHARSET --text-charset=CHARSET target text character set [default: printable]
   -p PLAIN --known-plaintext=PLAIN  use known plaintext for decoding
+  -r PERCENT, --threshold=PERCENT   threshold validity percentage [default: 95]
   -h --help                         show this help
 
 Notes:
@@ -66,6 +67,7 @@ Examples:
   xortool -x -c ' ' file.hex
   xortool -b -f -l 23 -t base64 message.enc
   xortool -b -p "xctf{" message.enc
+  xortool -r 80 -p "flag{" -c ' ' message.enc
 ```
 
 Example 1
