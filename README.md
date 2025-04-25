@@ -1,75 +1,79 @@
-xortool.py
-====================
+# xortool.py
 
 A tool to do some xor analysis:
 
-  - guess the key length (based on count of equal chars)
-  - guess the key (base on knowledge of most frequent char)
+- guess the key length (based on count of equal chars)
+- guess the key (base on knowledge of most frequent char)
 
-**Notice:** xortool is now only running on Python 3. The old Python 2 version is accessible at the `py2` branch. The **pip** package has been updated.
+**Notice:** xortool is now only running on Python 3. (And Update with `rye` project support and maximum support for Python 3.9-3.13+)
 
 ## Installation
 
 ```bash
-$ pip3 install xortool
+pip3 install xortool
 ```
 
 For development or building this repository, [poetry](https://python-poetry.org/) is needed.
-
 
 ```bash
 poetry build
 pip install dist/xortool*.whl
 ```
 
-Usage
----------------------
+## Usage
+
+```text
+$ xortool --help
+
+ Usage: xortool [OPTIONS] [FILENAME]
+
+ A tool to do some xor analysis:
+ - guess the key length (based on count of equal chars)
+ - guess the key (base on knowledge of most frequent char)
+
+╭─ Arguments ───────────────────────────────────────────────────────────────────────────────╮
+│   filename      [FILENAME]  Input file (or stdin if omitted)                              │
+╰───────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ─────────────────────────────────────────────────────────────────────────────────╮
+│ --hex              -x               Input is hex-encoded str                              │
+│ --key-length       -l      INTEGER  Length of the key [default: None]                     │
+│ --max-keylen       -m      INTEGER  Maximum key length to probe [default: 65]             │
+│ --char             -c      TEXT     Most frequent char (one char or hex code)             │
+│                                     [default: None]                                       │
+│ --brute-chars      -b               Brute force all possible most frequent chars          │
+│ --brute-printable  -o               Same as -b but will only check printable chars        │
+│ --filter-output    -f               Filter outputs based on the charset                   │
+│ --text-charset     -t      TEXT     Target text character set                             │
+│                                     [default:                                             │
+│                                     0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP… │
+│                                     ]                                                     │
+│ --known-plaintext  -p      TEXT     Use known plaintext for decoding [default: None]      │
+│ --version                           Show version and exit                                 │
+│ --help                              Show this message and exit.                           │
+╰───────────────────────────────────────────────────────────────────────────────────────────╯
 
 ```
-xortool
-  A tool to do some xor analysis:
-  - guess the key length (based on count of equal chars)
-  - guess the key (base on knowledge of most frequent char)
-
-Usage:
-  xortool [-x] [-m MAX-LEN] [-f] [-t CHARSET] [FILE]
-  xortool [-x] [-l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
-  xortool [-x] [-m MAX-LEN| -l LEN] [-c CHAR | -b | -o] [-f] [-t CHARSET] [-p PLAIN] [FILE]
-  xortool [-h | --help]
-  xortool --version
-
-Options:
-  -x --hex                          input is hex-encoded str
-  -l LEN, --key-length=LEN          length of the key
-  -m MAX-LEN, --max-keylen=MAX-LEN  maximum key length to probe [default: 65]
-  -c CHAR, --char=CHAR              most frequent char (one char or hex code)
-  -b --brute-chars                  brute force all possible most frequent chars
-  -o --brute-printable              same as -b but will only check printable chars
-  -f --filter-output                filter outputs based on the charset
-  -t CHARSET --text-charset=CHARSET target text character set [default: printable]
-  -p PLAIN --known-plaintext=PLAIN  use known plaintext for decoding
-  -h --help                         show this help
 
 Notes:
-  Text character set:
-    * Pre-defined sets: printable, base32, base64
-    * Custom sets:
-      - a: lowercase chars
-      - A: uppercase chars
-      - 1: digits
-      - !: special chars
-      - *: printable chars
+Text character set:
+
+- Pre-defined sets: printable, base32, base64
+- Custom sets:
+  - a: lowercase chars
+  - A: uppercase chars
+  - 1: digits
+  - !: special chars
+  - \*: printable chars
 
 Examples:
-  xortool file.bin
-  xortool -l 11 -c 20 file.bin
-  xortool -x -c ' ' file.hex
-  xortool -b -f -l 23 -t base64 message.enc
-  xortool -b -p "xctf{" message.enc
-```
 
-Example 1
----------------------
+- `xortool file.bin`
+- `xortool -l 11 -c 20 file.bin`
+- `xortool -x -c ' ' file.hex`
+- `xortool -b -f -l 23 -t base64 message.enc`
+- `xortool -b -p "xctf{" message.enc`
+
+## Example 1
 
 ```bash
 # xor is xortool/xortool-xor
@@ -149,8 +153,7 @@ So, if automated decryption fails, you can calibrate:
 - (`-l`) selected length to see some interesting keys
 - (`-c`) the most frequent char to produce right plaintext
 
-Example 2
----------------------
+## Example 2
 
 We are given a message in encoded in Base64 and XORed with an unknown key.
 
@@ -188,8 +191,7 @@ See files filename-key.csv, filename-char_used-perc_valid.csv
 
 By filtering the outputs on the character set of Base64, we directly keep the only solution.
 
-Information
----------------------
+## Information
 
 Author: hellman
 

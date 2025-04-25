@@ -1,4 +1,5 @@
 import string
+from typing import Optional
 
 
 class CharsetError(Exception):
@@ -14,13 +15,13 @@ CHARSETS = {
 }
 
 PREDEFINED_CHARSETS = {
-    "base32":    CHARSETS["A"] + "234567=",
-    "base64":    CHARSETS["a"] + CHARSETS["A"] + CHARSETS["1"] + "/+=",
+    "base32": CHARSETS["A"] + "234567=",
+    "base64": CHARSETS["a"] + CHARSETS["A"] + CHARSETS["1"] + "/+=",
     "printable": CHARSETS["*"],
 }
 
 
-def get_charset(charset):
+def get_charset(charset: Optional[str]):
     charset = charset or "printable"
     if charset in PREDEFINED_CHARSETS:
         return PREDEFINED_CHARSETS[charset].encode("ascii")

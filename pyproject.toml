@@ -1,8 +1,8 @@
-[tool.poetry]
+[project]
 name = "xortool"
-version = "1.0.2"
+version = "1.1.0"
 description = "A tool to analyze multi-byte xor cipher"
-authors = ["hellman"]
+authors = [{ name = "DawnMagnet", email = "axccjqh@qq.com" }]
 license = "MIT"
 readme = "README.md"
 keywords = ["xor", "xortool", "cryptanalysis"]
@@ -11,22 +11,28 @@ classifiers = [
     'Intended Audience :: Science/Research',
     'Topic :: Security :: Cryptography',
 ]
+requires-python = ">=3.6,<4.0"
+dependencies = [
+    "typer>=0.15.2",
+    "rich>=14.0.0",
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 xortool = 'xortool.tool_main:main'
 xortool-xor = 'xortool.tool_xor:main'
 
-[tool.poetry.urls]
+[project.urls]
 homepage = "http://github.com/hellman/xortool"
 
-[tool.poetry.dependencies]
-python = ">=3.6,<4.0"
-docopt = "^0.6.2"
-
-[tool.poetry.dev-dependencies]
-docopt = "^0.6.2"
-importlib_metadata = "^4.8"
-
 [build-system]
-requires = ["poetry-core>=1.0.0a5"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+# dev-dependencies = ["importlib_metadata ^4.8"]
+
+# [build-system]
+# requires = ["rye>=0.21.1"]
+# build-backend = "rye.masonry.api"

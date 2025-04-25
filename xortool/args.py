@@ -1,8 +1,3 @@
-from docopt import docopt
-
-from xortool.charset import get_charset
-
-
 class ArgError(Exception):
     pass
 
@@ -29,24 +24,3 @@ def parse_int(i):
     if i is None:
         return None
     return int(i)
-
-
-def parse_parameters(doc, version):
-    p = docopt(doc, version=version)
-    p = {k.lstrip("-"): v for k, v in p.items()}
-    try:
-        return {
-            "brute_chars": bool(p["brute-chars"]),
-            "brute_printable": bool(p["brute-printable"]),
-            "filename": p["FILE"] if p["FILE"] else "-",  # stdin by default
-            "filter_output": bool(p["filter-output"]),
-            "frequency_spread": 0,  # to be removed
-            "input_is_hex": bool(p["hex"]),
-            "known_key_length": parse_int(p["key-length"]),
-            "max_key_length": parse_int(p["max-keylen"]),
-            "most_frequent_char": parse_char(p["char"]),
-            "text_charset": get_charset(p["text-charset"]),
-            "known_plain": p["known-plaintext"].encode() if p["known-plaintext"] else False,
-        }
-    except ValueError as err:
-        raise ArgError(str(err))

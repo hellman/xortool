@@ -1,6 +1,6 @@
 import os
-import sys
 import string
+import sys
 
 
 class MkdirError(Exception):
@@ -34,7 +34,7 @@ def rmdir(dirname):
     if os.path.islink(dirname):
         return  # do not clear link - we can get out of dir
     for f in os.listdir(dirname):
-        if f in ('.', '..'):
+        if f in (".", ".."):
             continue
         path = dirname + os.sep + f
         if os.path.isdir(path):
@@ -43,8 +43,9 @@ def rmdir(dirname):
             os.unlink(path)
     os.rmdir(dirname)
 
+
 def decode_from_hex(text):
-    text = text.decode(encoding='ascii', errors='ignore')
+    text = text.decode(encoding="ascii", errors="ignore")
     only_hex_digits = "".join(c for c in text if c in string.hexdigits)
     return bytes.fromhex(only_hex_digits)
 

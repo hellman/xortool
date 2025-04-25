@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from xortool import __version__
+
 __doc__ = f"""
 xortool-xor {__version__}
 xor strings
@@ -25,8 +26,10 @@ def main():
     newline = True
     try:
         opts, _ = getopt.getopt(
-            sys.argv[1:], "ns:r:h:f:",
-            ["cycle", "no-cycle", "nc", "no-newline", "newline"])
+            sys.argv[1:],
+            "ns:r:h:f:",
+            ["cycle", "no-cycle", "nc", "no-newline", "newline"],
+        )
         datas = []
         for c, val in opts:
             if c == "--cycle":
@@ -65,7 +68,7 @@ def xor(args, cycle=True):
 
 
 def from_str(s):
-    res = b''
+    res = b""
     for char in s.encode("utf-8").decode("unicode_escape"):
         res += bytes([ord(char)])
     return res
@@ -89,5 +92,5 @@ def arg_data(opt, s):
     raise getopt.GetoptError("unknown option -%s" % opt)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

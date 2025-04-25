@@ -4,3 +4,7 @@ dist
 build
 MANIFEST
 TODO
+
+__pycache__
+.ruff*
+xortool_out
