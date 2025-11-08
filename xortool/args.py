@@ -1,13 +1,37 @@
+from __future__ import annotations
+
+from typing import Any, Literal, cast, overload, TypedDict
 from docopt import docopt
 
 from xortool.charset import get_charset
+
+class ParameterDict(TypedDict):
+
+    brute_chars: bool
+    brute_printable: bool
+    filename: str
+    filter_output: bool
+    frequency_spread: int
+    input_is_hex: bool
+    known_key_length: int | None
+    max_key_length: int | None
+    most_frequent_char: int | None
+    text_charset: str | bytes
+    known_plain: bytes | Literal[False]
+    threshold: int | None
+
 
 
 class ArgError(Exception):
     pass
 
+@overload
+def parse_char(ch: None) -> None: ...
 
-def parse_char(ch):
+@overload
+def parse_char(ch: str) -> int: ...
+
+def parse_char(ch: str | None) -> int | None:
     """
     'A' or '\x41' or '0x41' or '41'
     '\x00' or '0x00' or '00'
@@ -24,14 +48,19 @@ def parse_char(ch):
         raise ValueError("Char can be only a char letter or hex")
     return int(ch, 16)
 
+@overload
+def parse_int(i: None) -> None: ...
 
-def parse_int(i):
+@overload
+def parse_int(i: str) -> int: ...
+
+def parse_int(i: str | None) -> int | None:
     if i is None:
         return None
     return int(i)
 
 
-def parse_parameters(doc, version):
+def parse_parameters(doc: str, version: str) -> ParameterDict:
     p = docopt(doc, version=version)
     p = {k.lstrip("-"): v for k, v in p.items()}
     try:
