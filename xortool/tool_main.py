@@ -164,8 +164,8 @@ def guess_key_length(text: bytes) -> int:
 
 def calculate_fitnesses(text: bytes) -> list[tuple[int, float]]:
     """Calculate fitnesses for each keylen"""
-    prev = 0
-    pprev = 0
+    prev = 0.0
+    pprev = 0.0
     fitnesses: list[tuple[int, float]] = []
 
     max_key_len = PARAMETERS["max_key_length"]
@@ -176,10 +176,10 @@ def calculate_fitnesses(text: bytes) -> list[tuple[int, float]]:
 
 
     for key_length in range(1, range_end):
-        fitness = count_equals(text, key_length)
+        fitness = float(count_equals(text, key_length))
 
         # smaller key-length with nearly the same fitness is preferable
-        fitness = (float(fitness) /
+        fitness = float(float(fitness) /
                    (PARAMETERS["max_key_length"] + key_length ** 1.5))
 
         if pprev < prev and prev > fitness:  # local maximum
