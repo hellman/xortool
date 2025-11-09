@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, cast, overload, TypedDict
+from typing import Literal, overload, TypedDict
 from docopt import docopt
 
 from xortool.charset import get_charset
