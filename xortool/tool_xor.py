@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 from xortool import __version__
 __doc__ = f"""
 xortool-xor {__version__}
@@ -20,14 +22,14 @@ import getopt
 import sys
 
 
-def main():
+def main() -> None:
     cycle = True
     newline = True
     try:
         opts, _ = getopt.getopt(
             sys.argv[1:], "ns:r:h:f:",
             ["cycle", "no-cycle", "nc", "no-newline", "newline"])
-        datas = []
+        datas: list[bytes] = []
         for c, val in opts:
             if c == "--cycle":
                 cycle = True
@@ -51,7 +53,7 @@ def main():
         sys.stdout.buffer.write(b"\n")
 
 
-def xor(args, cycle=True):
+def xor(args: list[bytes], cycle: bool = True) -> bytearray:
     # Sort by len DESC
     args.sort(key=len, reverse=True)
     res = bytearray(args.pop(0))
@@ -64,20 +66,20 @@ def xor(args, cycle=True):
     return res
 
 
-def from_str(s):
+def from_str(s: str) -> bytes:
     res = b''
     for char in s.encode("utf-8").decode("unicode_escape"):
         res += bytes([ord(char)])
     return res
 
 
-def from_file(s):
+def from_file(s: str | int) -> bytes:
     if s == "-":
         s = sys.stdin.fileno()
     return open(s, "rb").read()
 
 
-def arg_data(opt, s):
+def arg_data(opt: str, s: str) -> bytes:
     if opt == "-s":
         return from_str(s)
     if opt == "-r":

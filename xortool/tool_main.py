@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import cast
 from xortool import __version__
 __doc__ = f"""
 xortool {__version__}
@@ -50,6 +54,7 @@ import string
 import sys
 
 from xortool.args import(
+    ParameterDict,
     parse_parameters,
     ArgError,
 )
@@ -76,20 +81,21 @@ from xortool.routine import (
 
 
 DIRNAME = 'xortool_out'  # here plaintexts will be placed
-PARAMETERS = dict()
+PARAMETERS: ParameterDict = cast(ParameterDict, dict())
 
 
 class AnalysisError(Exception):
     pass
 
 
-def main():
+def main() -> None:
     try:
         PARAMETERS.update(parse_parameters(__doc__, __version__))
         ciphertext = get_ciphertext()
         if not PARAMETERS["known_key_length"]:
             PARAMETERS["known_key_length"] = guess_key_length(ciphertext)
 
+        try_chars: Iterable[int]
         if PARAMETERS["brute_chars"]:
             try_chars = range(256)
         elif PARAMETERS["brute_printable"]:
@@ -129,7 +135,7 @@ def main():
 # LOADING CIPHERTEXT
 # -----------------------------------------------------------------------------
 
-def get_ciphertext():
+def get_ciphertext() -> bytes:
     """Load ciphertext from a file or stdin and hex-decode if needed"""
     ciphertext = load_file(PARAMETERS["filename"])
     if PARAMETERS["input_is_hex"]:
@@ -141,7 +147,7 @@ def get_ciphertext():
 # KEYLENGTH GUESSING SECTION
 # -----------------------------------------------------------------------------
 
-def guess_key_length(text):
+def guess_key_length(text: bytes) -> int:
     """
     Try key lengths from 1 to max_key_length and print local maximums
 
@@ -156,16 +162,24 @@ def guess_key_length(text):
     return get_max_fitnessed_key_length(fitnesses)
 
 
-def calculate_fitnesses(text):
+def calculate_fitnesses(text: bytes) -> list[tuple[int, float]]:
     """Calculate fitnesses for each keylen"""
-    prev = 0
-    pprev = 0
-    fitnesses = []
-    for key_length in range(1, PARAMETERS["max_key_length"] + 1):
-        fitness = count_equals(text, key_length)
+    prev = 0.0
+    pprev = 0.0
+    fitnesses: list[tuple[int, float]] = []
+
+    max_key_len = PARAMETERS["max_key_length"]
+    if max_key_len:
+        range_end = max_key_len + 1
+    else:
+        range_end = 0
+
+
+    for key_length in range(1, range_end):
+        fitness = float(count_equals(text, key_length))
 
         # smaller key-length with nearly the same fitness is preferable
-        fitness = (float(fitness) /
+        fitness = float(float(fitness) /
                    (PARAMETERS["max_key_length"] + key_length ** 1.5))
 
         if pprev < prev and prev > fitness:  # local maximum
@@ -180,7 +194,7 @@ def calculate_fitnesses(text):
     return fitnesses
 
 
-def print_fitnesses(fitnesses):
+def print_fitnesses(fitnesses: list[tuple[int, float]]) -> None:
     print("The most probable key lengths:")
 
     # top sorted by fitness, but print sorted by length
@@ -205,11 +219,11 @@ def print_fitnesses(fitnesses):
         print(fmt.format(key_length, pct, **colors))
 
 
-def calculate_fitness_sum(fitnesses):
+def calculate_fitness_sum(fitnesses: list[tuple[int, float]]) -> float:
     return sum([f[1] for f in fitnesses])
 
 
-def count_equals(text, key_length):
+def count_equals(text: bytes, key_length: int) -> int:
     """Count equal chars count for each offset and sum them"""
     equals_count = 0
     if key_length >= len(text):
@@ -221,11 +235,14 @@ def count_equals(text, key_length):
     return equals_count
 
 
-def guess_and_print_divisors(fitnesses):
+def guess_and_print_divisors(fitnesses: list[tuple[int, float]]) -> int:
     """
     Prints common divisors and returns the most common divisor
     """
-    divisors_counts = [0] * (PARAMETERS["max_key_length"] + 1)
+    max_key_len = PARAMETERS["max_key_length"]
+    if not max_key_len:
+        max_key_len = 0
+    divisors_counts = [0] * (max_key_len + 1)
     for key_length, fitness in fitnesses:
         for number in range(3, key_length + 1):
             if key_length % number == 0:
@@ -245,8 +262,8 @@ def guess_and_print_divisors(fitnesses):
     return ret
 
 
-def get_max_fitnessed_key_length(fitnesses):
-    max_fitness = 0
+def get_max_fitnessed_key_length(fitnesses: list[tuple[int, float]]) -> int:
+    max_fitness = 0.0
     max_fitnessed_key_length = 0
     for key_length, fitness in fitnesses:
         if fitness > max_fitness:
@@ -255,8 +272,8 @@ def get_max_fitnessed_key_length(fitnesses):
     return max_fitnessed_key_length
 
 
-def chars_count_at_offset(text, key_length, offset):
-    chars_count = dict()
+def chars_count_at_offset(text: bytes, key_length: int, offset: int) -> dict[int, int]:
+    chars_count: dict[int, int] = dict()
     for pos in range(offset, len(text), key_length):
         c = text[pos]
         if c in chars_count:
@@ -270,12 +287,12 @@ def chars_count_at_offset(text, key_length, offset):
 # KEYS GUESSING SECTION
 # -----------------------------------------------------------------------------
 
-def guess_probable_keys_for_chars(text, try_chars):
+def guess_probable_keys_for_chars(text: bytes, try_chars: Iterable[int]) -> tuple[list[bytes], dict[bytes, int]]:
     """
     Guess keys for list of characters.
     """
-    probable_keys = []
-    key_char_used = {}
+    probable_keys: list[bytes] = []
+    key_char_used: dict[bytes, int] = {}
 
     for c in try_chars:
         keys = guess_keys(text, c)
@@ -287,13 +304,15 @@ def guess_probable_keys_for_chars(text, try_chars):
     return probable_keys, key_char_used
 
 
-def guess_keys(text, most_char):
+def guess_keys(text: bytes, most_char: int) -> list[bytes]:
     """
     Generate all possible keys for key length
     and the most possible char
     """
     key_length = PARAMETERS["known_key_length"]
-    key_possible_bytes = [[] for _ in range(key_length)]
+    if not key_length:
+        key_length = 0
+    key_possible_bytes: list[list[int]] = [[] for _ in range(key_length)]
 
     for offset in range(key_length):  # each byte of key<
         chars_count = chars_count_at_offset(text, key_length, offset)
@@ -305,11 +324,11 @@ def guess_keys(text, most_char):
     return all_keys(key_possible_bytes)
 
 
-def all_keys(key_possible_bytes, key_part=(), offset=0):
+def all_keys(key_possible_bytes: list[list[int]], key_part: tuple[int, ...] = (), offset: int = 0) -> list[bytes]:
     """
     Produce all combinations of possible key chars
     """
-    keys = []
+    keys: list[bytes] = []
     if offset >= len(key_possible_bytes):
         return [bytes(key_part)]
     for c in key_possible_bytes[offset]:
@@ -317,7 +336,7 @@ def all_keys(key_possible_bytes, key_part=(), offset=0):
     return keys
 
 
-def print_keys(keys):
+def print_keys(keys: list[bytes]) -> None:
     if not keys:
         print("No keys guessed!")
         return
@@ -334,7 +353,7 @@ def print_keys(keys):
 # RETURNS PERCENTAGE OF VALID TEXT CHARS
 # -----------------------------------------------------------------------------
 
-def percentage_valid(text):
+def percentage_valid(text: bytes) -> float:
     x = 0.0
     for c in text:
         if c in PARAMETERS["text_charset"]:
@@ -346,7 +365,7 @@ def percentage_valid(text):
 # PRODUCE OUTPUT
 # -----------------------------------------------------------------------------
 
-def produce_plaintexts(ciphertext, keys, key_char_used):
+def produce_plaintexts(ciphertext: bytes, keys: list[bytes], key_char_used: dict[bytes, int]) -> None:
     """
     Produce plaintext variant for each possible key,
     creates csv files with keys, percentage of valid
@@ -367,7 +386,7 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     key_mapping.write("file_name;key_repr\n")
     perc_mapping.write("file_name;char_used;perc_valid\n")
 
-    
+
     if PARAMETERS["threshold"]:
         threshold_valid = PARAMETERS["threshold"]
     else:
@@ -407,7 +426,7 @@ def produce_plaintexts(ciphertext, keys, key_char_used):
     print("See files {}, {}".format(fn_key_mapping, fn_perc_mapping))
 
 
-def cleanup():
+def cleanup() -> None:
     if os.path.exists(DIRNAME):
         rmdir(DIRNAME)
 

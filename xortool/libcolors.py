@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+from typing import cast
 
 
 BASH_ATTRIBUTES = {"regular": "0",
@@ -13,7 +16,7 @@ BASH_BGCOLORS = {"black": "40", "red": "41", "green": "42", "yellow": "43",
                  "blue": "44", "purple": "45", "cyan": "46", "white": "47"}
 
 
-def _main():
+def _main() -> None:
     header = color("white", "black", "dark")
     print()
 
@@ -36,7 +39,7 @@ def _main():
     print()
 
 
-def color(color=None, bgcolor=None, attrs=None):
+def color(color: str | None = None, bgcolor: str | None = None, attrs: str | None = None) -> str:
     if not is_bash():
         return ""
 
@@ -61,13 +64,15 @@ def color(color=None, bgcolor=None, attrs=None):
     return ret + "m"
 
 
-def is_bash():
+def is_bash() -> bool:
     return os.environ.get("SHELL", "unknown").endswith("bash")
 
 
-def _keys_sorted_by_values(adict):
+def _keys_sorted_by_values(adict: dict[str, str]) -> list[str]:
     """Return list of the keys of @adict sorted by values."""
-    return sorted(adict, key=adict.get)
+    # Casting is fine here, we are sorting, adict.get will always
+    # get a value, and never return "None"
+    return sorted(adict, key=lambda v: cast(str, adict.get(v)))
 
 
 if __name__ == "__main__":

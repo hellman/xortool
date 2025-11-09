@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import string
 
 
@@ -20,7 +22,7 @@ PREDEFINED_CHARSETS = {
 }
 
 
-def get_charset(charset):
+def get_charset(charset: str | None) -> str | bytes:
     charset = charset or "printable"
     if charset in PREDEFINED_CHARSETS:
         return PREDEFINED_CHARSETS[charset].encode("ascii")

@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
     "docopt>=0.6.2",
 ]
+requires-python = ">=3.8"
 
 [project.scripts]
 xortool = 'xortool.tool_main:main'
@@ -29,6 +30,7 @@ homepage = "http://github.com/hellman/xortool"
 
 [tool.poetry.group.dev.dependencies]
 importlib_metadata = "^4.8"
+types-docopt = "^0.6"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
